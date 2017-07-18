@@ -1,10 +1,14 @@
 import threading
+from threading import Lock
 from time import sleep, ctime
 
 loops = [4,2]
+lock = Lock()
 
 def loop(nloop, nsec):
+	lock.acquire()
 	print 'start loop', nloop, 'at:', ctime()
+	lock.release()
 	sleep(nsec)
 	print 'loop', nloop, 'done at:', ctime()
 

@@ -1,4 +1,4 @@
-import httplib, urllib, base64
+import httplib, urllib, base64,json
 
 headers = {
     # Request headers
@@ -7,12 +7,12 @@ headers = {
 
 params = urllib.urlencode({
     # Request parameters
-    'expr': "And(Composite(AA.AuN=='whitfield diffie'),Y>2010)",
+    'expr': "Ti='virtual reality'",
     'model': 'latest',
-    'count': '100',
+    'count': '1000',
     'offset': '0',
     'orderby': 'Y:asc',
-    'attributes': "Ti,F.FN,AA.AuId",
+    'attributes': "Id,Ti,Y,F.FN",
 })
 
 try:
@@ -20,6 +20,8 @@ try:
     conn.request("GET", "/academic/v1.0/evaluate?%s" % params, "{body}", headers)
     response = conn.getresponse()
     data = response.read()
+    f=open("quantum.json","w")
+    json.dump(data,f,encoding="utf8")
     print(data)
     conn.close()
 except Exception as e:

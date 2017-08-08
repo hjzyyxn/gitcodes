@@ -14,11 +14,11 @@ FIELDS = ('login', 'userid', 'projid')
 RDBMSs = {'s': 'sqlite', 'm': 'mysql', 'g': 'gadfly'}
 DBNAME = 'test'
 DBUSER = 'root'
-DB_EXC = None
+DB_EXC = None                                       #exception module
 NAMELEN = 16
 
 tformat = lambda s: str(s).title().ljust(COLSIZ)
-cformat = lambda s: s.opper().ljust(COLSIZ)
+cformat = lambda s: s.upper().ljust(COLSIZ)
 
 def setup():
 	return RDBMSs[raw_input('''

@@ -33,7 +33,7 @@ class SQLObjectTest(object):
 		self.cxn = sqlhub.processConnection = cxn
 
 	def insert(self):
-		for who, userid in randName()
+		for who, userid in randName():
 			Users(login=who, userid=userid, projid=rand(1,5))
 	
 	def update(self):

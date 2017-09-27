@@ -78,7 +78,35 @@ public class QuadraticProbingHashTable<AnyType> {
 				insert(oldArray[i].element);
 	}
 
-	private int myhash(AnyType x) {}
-	private static int nextPrime(int n) {}
-	private static boolean isPrime(int n) {}
+	private int myhash(AnyType x) {
+		int hashVal = x.hashCode( );
+
+        hashVal %= array.length;
+        if( hashVal < 0 )
+            hashVal += array.length;
+
+        return hashVal;
+	}
+	private static int nextPrime(int n) {
+		if( n % 2 == 0 )
+            n++;
+
+        for( ; !isPrime( n ); n += 2 )
+            ;
+
+        return n;
+	}
+	private static boolean isPrime(int n) {
+		if( n == 2 || n == 3 )
+            return true;
+
+        if( n == 1 || n % 2 == 0 )
+            return false;
+
+        for( int i = 3; i * i <= n; i += 2 )
+            if( n % i == 0 )
+                return false;
+
+        return true;
+	}
 }

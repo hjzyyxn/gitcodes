@@ -1,9 +1,3 @@
-/adapter/
-/factory/
-/idcard/
-/iterator/
-/proto/
-/prototype/
-/singleton/
-/template/
-/builder/
+/abstractfactory/
+/factoryidcard/
+/aflistfactory/

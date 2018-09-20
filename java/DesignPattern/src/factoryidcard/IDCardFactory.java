@@ -1,4 +1,4 @@
-package idcard;
+package factoryidcard;
 import factory.*;
 import java.util.*;
 

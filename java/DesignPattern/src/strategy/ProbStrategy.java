@@ -7,7 +7,6 @@ public class ProbStrategy implements Strategy {
 	@Override
 	public Hand nextHand() {
 		// TODO Auto-generated method stub
-		return null;
 	}
 
 	@Override

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>test</title>
+</head>
+<body>
+
+    <h1 style="background-color: antiquewhite;color:black;">用户输入</h1>
+    <form action="/index/" method="post">
+        name: <input type ="text" name="name"/>
+        page number: <input type ="text" value="120" name="pagenum"/>
+        <select name="type">
+            <option value="cluster">聚合</option>
+            <option value="crawl">爬取</option>
+        </select>
+
+
+        <input type="submit" value="提交" />
+    </form>
+    <hr />
+    <table width="100%" border="0" cellpadding="2" cellspacing="1" style="table-layout:fixed;">
+    <tr>
+
+        <td style="width:100px" valign="top";>
+            <h3>history</h3>
+            <hr style="height:1px;border:none;border-top:1px solid #555555;" />
+            {% for line in namels %}
+                <li>{{ line }}</li>
+            {% endfor %}
+        </td>
+    <td>
+    <h1 style="background-color: antiquewhite;color:black;">结果展示</h1>
+    <table border="1" width="100%">
+           <thead>
+               <th>no</th>
+               <th>address</th>
+               <th>word</th>
+               <th>ner</th>
+           </thead>
+           <tbody>
+           　　{% for line in data %}
+                   <tr>
+                       <td>{{ line.no }}</td>
+                       <td>
+                            <li>{{ line.netaddress | urlize }}</li>
+                       </td>
+                       <td>{% for lin in line.words %}
+                           <li>{{ lin.0 }}, {{ lin.1 }}</li>
+                           {% endfor %}
+                       </td>
+                       <td>{% for key,value in line.ner.items %}
+                           <li>{{ key }}: {% for lin in value %}
+                           <p>{{ lin.0 }}, {{ lin.1 }}</p>
+                           {% endfor %}</li>
+                           {% endfor %}</td>
+                   </tr>
+               {% endfor %}
+           </tbody>
+    </table>
+    <table border="1">
+           <thead>
+               <th>unuseaddress</th>
+           </thead>
+           <tbody>
+           　　{% for line in unuse %}
+                   <tr>
+                       <td> {{ line | urlize }}</td>
+                   </tr>
+               {% endfor %}
+           </tbody>
+    </table>
+    </td>
+    </tr>
+    </table>
+
+
+    <script src="/static/js/jquery-3.3.1.min.js"></script>
+
+</body>
+</html>

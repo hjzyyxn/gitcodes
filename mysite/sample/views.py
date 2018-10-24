@@ -36,19 +36,34 @@ def index(request):
         name = request.POST.get("name", None)
         pagenum = request.POST.get("pagenum", None)
         type = request.POST.get("type", None)
-        name_list.append(name)
+        savehistory(name)
+        name_list = loadhistory()
         if type == 'crawl':
             webcrawler(name, pagenum)
             webparse(name)
+            webmanipulate(name)
             finallist, unuselist = showwebpage(name)
             return render(request, "crawl.html", {"data": finallist, "unuse": unuselist, "namels": name_list})
         else:
-            #webcrawler(name,pagenum)
-            #webparse(name)
-            #webmanipulate(name)
+            webcrawler(name,pagenum)
+            webparse(name)
+            webmanipulate(name)
             finallist, unuselist = webalgorithm(name)
             return render(request, "index.html", {"data": finallist, "unuse": unuselist,"namels": name_list})
-    return render(request, "index.html",)
+    if request.method == "GET":
+        if not request.GET:
+            name_list = loadhistory()
+            return render(request, "index.html", {"namels": name_list})
+
+        name = request.GET['name']
+        name = name[1:-1]
+        print name
+        name_list = loadhistory()
+        webmanipulate(name)
+        finallist, unuselist = webalgorithm(name)
+        return render(request, "index.html", {"data": finallist, "unuse": unuselist, "namels": name_list})
+    name_list = loadhistory()
+    return render(request, "index.html", {"namels": name_list})
 
 def webcrawler(name,pagenum):
 # Or MagicGoogle()
@@ -624,3 +639,41 @@ def showwebpage(name):
     return finallist, unuselist
 
 
+def savehistory(name):
+    conn = pymysql.connect(host='127.0.0.1', port=3306, user='root', password="123",
+                           db='mysql', charset="utf8")
+    cur = conn.cursor()
+    cur.execute("USE scraping")
+
+
+    try:
+        cur.execute("insert into historylist" + " (name) values (\"%s\")", (name))
+        cur.connection.commit()
+
+    finally:
+        cur.close()
+        conn.close()
+
+def loadhistory():
+    conn = pymysql.connect(host='127.0.0.1', port=3306, user='root', password="123",
+                           db='mysql', charset="utf8")
+    cur = conn.cursor()
+    cur.execute("USE scraping")
+
+    sql = "select * from historylist"
+    try:
+        cur.execute(sql)
+        results = cur.fetchall()
+    except:
+        print "Error: unable to fetch data"
+
+    namelist = []
+    try:
+        for row in results:
+            namelist.append(row[1])
+
+    finally:
+        cur.close()
+        conn.close()
+
+    return namelist

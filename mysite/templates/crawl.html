@@ -22,11 +22,11 @@
     <table width="100%" border="0" cellpadding="2" cellspacing="1" style="table-layout:fixed;">
     <tr>
 
-        <td style="width:100px" valign="top";>
+        <td style="width:150px" valign="top";>
             <h3>history</h3>
             <hr style="height:1px;border:none;border-top:1px solid #555555;" />
             {% for line in namels %}
-                <li>{{ line }}</li>
+                <li><a href="{% url 'sample:crawl' %}?name={{ line }}">{{ line }}</a></li>
             {% endfor %}
         </td>
     <td>

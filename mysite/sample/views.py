@@ -33,23 +33,28 @@ name_list = []
 def index(request):
     #return HttpResponse("hello world!")
     if request.method == "POST":
-        name = request.POST.get("name", None)
-        pagenum = request.POST.get("pagenum", None)
-        type = request.POST.get("type", None)
-        savehistory(name)
-        name_list = loadhistory()
-        if type == 'crawl':
-            webcrawler(name, pagenum)
-            webparse(name)
-            webmanipulate(name)
-            finallist, unuselist = showwebpage(name)
-            return render(request, "crawl.html", {"data": finallist, "unuse": unuselist, "namels": name_list})
+        if request.POST.get("delete") == "删除":
+            deletehistory()
+            name_list = loadhistory()
+            return render(request, "index.html", {"namels": name_list})
         else:
-            webcrawler(name,pagenum)
-            webparse(name)
-            webmanipulate(name)
-            finallist, unuselist = webalgorithm(name)
-            return render(request, "index.html", {"data": finallist, "unuse": unuselist,"namels": name_list})
+            name = request.POST.get("name", None)
+            pagenum = request.POST.get("pagenum", None)
+            type = request.POST.get("type", None)
+            savehistory(name)
+            name_list = loadhistory()
+            if type == 'crawl':
+                webcrawler(name, pagenum)
+                webparse(name)
+                webmanipulate(name)
+                finallist, unuselist = showwebpage(name)
+                return render(request, "crawl.html", {"data": finallist, "unuse": unuselist, "namels": name_list})
+            else:
+                webcrawler(name,pagenum)
+                webparse(name)
+                webmanipulate(name)
+                finallist, unuselist = webalgorithm(name)
+                return render(request, "index.html", {"data": finallist, "unuse": unuselist,"namels": name_list})
     if request.method == "GET":
         if not request.GET:
             name_list = loadhistory()
@@ -79,7 +84,7 @@ def webcrawler(name,pagenum):
     conn = pymysql.connect(host = '127.0.0.1', port = 3306, user = 'root',password="123",
                         db = 'mysql', charset="utf8")
     cur = conn.cursor()
-    cur.execute("USE scraping")
+    cur.execute("USE data")
     cur.execute("drop table if exists " + tablename +"url")
     sql_create = "create table " + tablename +"url" +" (id int not null AUTO_INCREMENT, url varchar(300), PRIMARY KEY (id)) engine = innodb charset = utf8 "
     cur.execute(sql_create)
@@ -115,7 +120,7 @@ def webmanipulate(name):
     conn = pymysql.connect(host = '127.0.0.1', port = 3306, user = 'root',password="123",
                         db = 'mysql', charset="utf8")
     cur = conn.cursor()
-    cur.execute("USE scraping")
+    cur.execute("USE data")
     sql = "select * from " + tablename + "raw"
 
     try:
@@ -126,7 +131,7 @@ def webmanipulate(name):
 
 
     namelist = name.split('_')
-
+    namelist.extend(name.upper().split('_'))
 
 
     stopwords = nltk.corpus.stopwords.words('english')
@@ -160,7 +165,7 @@ def webmanipulate(name):
             for ele in namelist:
                 result = result.replace(ele, "")
             allwords_stemmed = tokenize_and_stem(result)
-            if len(allwords_stemmed) > 100:
+            if len(allwords_stemmed) > 200:
                 cur.execute("insert into " + tablename + "word" + "(id, url, wordset) values (\"%s\",\"%s\", \"%s\")", (row[0], row[1], allwords_stemmed))
                 cur.connection.commit()
 
@@ -174,7 +179,7 @@ def webparse(name):
     conn = pymysql.connect(host = '127.0.0.1', port = 3306, user = 'root',password="123",
                       db = 'mysql', charset="utf8")
     cur = conn.cursor()
-    cur.execute("USE scraping")
+    cur.execute("USE data")
 
     sql = "select * from " + tablename + "url"
     try:
@@ -200,7 +205,7 @@ def webparse(name):
                 html = urllib2.urlopen(req)
                 #html = urlopen(urltemp[1:-1])
                 bsObj = BeautifulSoup(html, "lxml")
-                paras = bsObj.find_all({'h1', 'h2', 'h3', 'h4', 'article', 'p', 'blockquote'})
+                paras = bsObj.find_all({'h1', 'h2', 'h3', 'article', 'p', 'blockquote'})
                 for para in paras:
                     paratemp.append(para.get_text())
                 paras = bsObj.find_all('div', class_='body')
@@ -227,7 +232,7 @@ def webalgorithm(name):
                         db = 'mysql', charset="utf8")
 
     cur = conn.cursor()
-    cur.execute("USE scraping")
+    cur.execute("USE data")
     sql = "select * from " + tablename + "raw"
 
     try:
@@ -238,6 +243,7 @@ def webalgorithm(name):
 
 
     namelist = name.split(' ')
+    namelist.extend(name.upper().split('_'))
 
     stopwords = nltk.corpus.stopwords.words('english')
 
@@ -284,7 +290,7 @@ def webalgorithm(name):
     from sklearn.feature_extraction.text import TfidfVectorizer
 
 
-    tfidf_vectorizer = TfidfVectorizer(max_df=0.8, max_features=200000,
+    tfidf_vectorizer = TfidfVectorizer(max_df=0.85, max_features=200000,
                                     min_df=0.2, stop_words='english',
                                     use_idf=True, tokenizer=tokenize_and_stem, ngram_range=(1,3))
 
@@ -328,7 +334,7 @@ def webalgorithm(name):
     c = Counter(clusters)
 
     reac = clusters
-
+    print reac
     from sklearn import metrics
     from sklearn.metrics import pairwise_distances
 
@@ -371,7 +377,7 @@ def webalgorithm(name):
     pure = []
     unpure = []
     for i in range(0, len(sirate)):
-        if sirate[i] > 0.55:
+        if sirate[i] > 0.45:
             pure.append(i)
         else:
             unpure.append(i)
@@ -420,12 +426,13 @@ def webalgorithm(name):
 
     tfidf_matrixup = tfidf_vectorizerup.fit_transform(synopsesunpure)
     distup = 1 - cosine_similarity(tfidf_matrixup)
-    linkage_matrixup = average(distup) #define the linkage_matrix using ward clustering pre-computed distances
+    linkage_matrixup = ward(distup) #define the linkage_matrix using ward clustering pre-computed distances
 
     cutreeup = cut_tree(linkage_matrixup, n_clusters=len(unpure))
     unpurere = []
     for i in range(0, len(cutreeup)):
         unpurere.append(cutreeup[i][0])
+    print unpurere
 
 
     def clusterResult(cluster, pages, type, offset):
@@ -443,6 +450,7 @@ def webalgorithm(name):
     b = clusterResult(list(set(unpurere)), unpurepage, unpurere, len(pure))
     clusterresult = dict()
     tempresult = dict(a.items() + b.items())
+    print tempresult
     for i in tempresult:
         if len(tempresult[i]) != 1:
             clusterresult[i] = tempresult[i]
@@ -454,7 +462,7 @@ def webalgorithm(name):
                         db = 'mysql', charset="utf8")
 
     cur = conn.cursor()
-    cur.execute("USE scraping")
+    cur.execute("USE data")
     sql = "select * from " + tablename + "raw"
 
     try:
@@ -533,9 +541,9 @@ def webalgorithm(name):
                     for i in ners[j]:
                         if i.replace('Mr','') != '':
                             temp.append(i.replace('Mr',''))
-                    d[j] = collections.Counter(temp).most_common(8)
+                    d[j] = collections.Counter(temp).most_common(4)
                 else:
-                    d[j] = collections.Counter(ners[j]).most_common(8)
+                    d[j] = collections.Counter(ners[j]).most_common(4)
         nertype.append(d)
 
     finallist = []
@@ -556,7 +564,7 @@ def showwebpage(name):
                            db='mysql', charset="utf8")
 
     cur = conn.cursor()
-    cur.execute("USE scraping")
+    cur.execute("USE data")
     sql = "select * from " + tablename + "raw"
 
     try:
@@ -575,6 +583,7 @@ def showwebpage(name):
                 filtered_tokens.append(token)
         return filtered_tokens
     namelist = name.split(' ')
+    namelist.extend(name.upper().split('_'))
     stopwords = nltk.corpus.stopwords.words('english')
     stringdata = []
     addresslist = []
@@ -622,9 +631,10 @@ def showwebpage(name):
                     for i in ners[j]:
                         if i.replace('Mr', '') != '':
                             temp.append(i.replace('Mr', ''))
-                    d[j] = collections.Counter(temp).most_common(8)
+                    d[j] = collections.Counter(temp).most_common(6)
                 else:
-                    d[j] = collections.Counter(ners[j]).most_common(8)
+                    d[j] = collections.Counter(ners[j]).most_common(6)
+                    print d[j]
         nertype.append(d)
 
     finallist = []
@@ -643,7 +653,7 @@ def savehistory(name):
     conn = pymysql.connect(host='127.0.0.1', port=3306, user='root', password="123",
                            db='mysql', charset="utf8")
     cur = conn.cursor()
-    cur.execute("USE scraping")
+    cur.execute("USE data")
 
 
     try:
@@ -658,7 +668,8 @@ def loadhistory():
     conn = pymysql.connect(host='127.0.0.1', port=3306, user='root', password="123",
                            db='mysql', charset="utf8")
     cur = conn.cursor()
-    cur.execute("USE scraping")
+    cur.execute("USE data")
+    cur.execute("create table if not exists historylist(id int not null AUTO_INCREMENT, name varchar(30), PRIMARY KEY (id))")
 
     sql = "select * from historylist"
     try:
@@ -677,3 +688,14 @@ def loadhistory():
         conn.close()
 
     return namelist
+
+def deletehistory():
+    conn = pymysql.connect(host='127.0.0.1', port=3306, user='root', password="123",
+                           db='mysql', charset="utf8")
+    cur = conn.cursor()
+    cur.execute("USE data")
+    cur.execute("drop table if exists historylist")
+    cur.execute("create table if not exists historylist(id int not null AUTO_INCREMENT, name varchar(30), PRIMARY KEY (id))")
+
+    cur.close()
+    conn.close()

@@ -6,13 +6,14 @@
 </head>
 <body>
 
-    <h1 style="background-color: antiquewhite;color:black;">用户输入</h1>
+    <h1 style="background-color: antiquewhite;color:black;">请输入待查姓名，网页数量及信息展示效果</h1>
     <form action="/index/" method="post">
-        name: <input type ="text" name="name"/>
-        page number: <input type ="text" value="120" name="pagenum"/>
-        <select name="type">
-            <option value="cluster">聚合</option>
-            <option value="crawl">爬取</option>
+        人物姓名: <input type ="text" name="name"/>
+        网页数量（默认120）: <input type ="text" value="120" name="pagenum"/>
+        网页最少词数（默认200, 只限聚合功能）: <input type ="text" value="200" name="numofword"/>
+        功能：<select name="type">
+            <option value="cluster">聚合人物信息</option>
+            <option value="crawl">爬取人物网页</option>
         </select>
 
 
@@ -23,7 +24,10 @@
     <tr>
 
         <td style="width:150px" valign="top";>
-            <h3>history</h3>
+            <h3>历史查询</h3>
+        　　<form action="/index/" method="post">
+                <input name="delete" type="submit" value="删除" />
+            </form>
             <hr style="height:1px;border:none;border-top:1px solid #555555;" />
             {% for line in namels %}
                 <li><a href="{% url 'sample:crawl' %}?name={{ line }}">{{ line }}</a></li>
@@ -31,12 +35,12 @@
         </td>
     <td>
     <h1 style="background-color: antiquewhite;color:black;">结果展示</h1>
-    <table border="1" width="100%">
+    <table border="1">
            <thead>
-               <th>no</th>
-               <th>address</th>
-               <th>word</th>
-               <th>ner</th>
+               <th>网页编号</th>
+               <th>网页地址</th>
+               <th>高频关键词及数量</th>
+               <th>高频命名实体及数量</th>
            </thead>
            <tbody>
            　　{% for line in data %}
@@ -60,7 +64,7 @@
     </table>
     <table border="1">
            <thead>
-               <th>unuseaddress</th>
+               <th>未使用网页（网页相关信息较少）</th>
            </thead>
            <tbody>
            　　{% for line in unuse %}

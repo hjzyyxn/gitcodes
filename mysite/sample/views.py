@@ -40,19 +40,19 @@ def index(request):
         else:
             name = request.POST.get("name", None)
             pagenum = request.POST.get("pagenum", None)
+            numofword = request.POST.get("numofword", None)
             type = request.POST.get("type", None)
             savehistory(name)
             name_list = loadhistory()
             if type == 'crawl':
                 webcrawler(name, pagenum)
                 webparse(name)
-                webmanipulate(name)
                 finallist, unuselist = showwebpage(name)
                 return render(request, "crawl.html", {"data": finallist, "unuse": unuselist, "namels": name_list})
             else:
                 webcrawler(name,pagenum)
                 webparse(name)
-                webmanipulate(name)
+                webmanipulate(name, numofword)
                 finallist, unuselist = webalgorithm(name)
                 return render(request, "index.html", {"data": finallist, "unuse": unuselist,"namels": name_list})
     if request.method == "GET":
@@ -64,7 +64,7 @@ def index(request):
         name = name[1:-1]
         print name
         name_list = loadhistory()
-        webmanipulate(name)
+        webmanipulate(name, 200)
         finallist, unuselist = webalgorithm(name)
         return render(request, "index.html", {"data": finallist, "unuse": unuselist, "namels": name_list})
     name_list = loadhistory()
@@ -73,7 +73,7 @@ def index(request):
 def webcrawler(name,pagenum):
 # Or MagicGoogle()
     mg = MagicGoogle()
-    excludeurl = ['youtube', 'facebook', 'twitter', 'amazon', 'linkedin', 'wikipedia','imdb','vimeo']
+    excludeurl = ['youtube', 'facebook', 'twitter', 'amazon', 'linkedin', 'wikipedia','imdb','vimeo','pdf']
 
 # The first page of results
 # result = mg.search_page(query='python')
@@ -114,7 +114,7 @@ def webcrawler(name,pagenum):
         conn.close()
 
 
-def webmanipulate(name):
+def webmanipulate(name, numofword):
 
     tablename = name.replace(" ","").lower()
     conn = pymysql.connect(host = '127.0.0.1', port = 3306, user = 'root',password="123",
@@ -165,7 +165,7 @@ def webmanipulate(name):
             for ele in namelist:
                 result = result.replace(ele, "")
             allwords_stemmed = tokenize_and_stem(result)
-            if len(allwords_stemmed) > 200:
+            if len(allwords_stemmed) > int(numofword):
                 cur.execute("insert into " + tablename + "word" + "(id, url, wordset) values (\"%s\",\"%s\", \"%s\")", (row[0], row[1], allwords_stemmed))
                 cur.connection.commit()
 
@@ -518,7 +518,7 @@ def webalgorithm(name):
     for i in range(0, len(t)):
         pos_tags = nltk.pos_tag(t[i][:8500])
         ret = []
-        gabwords = ['\'s', 'http', 'Inc.', 'url', 'i', 'year', 'URL', 'Mr']
+        gabwords = ['\'s', 'http', 'Inc.', 'url', 'i', 'year', 'URL', 'Mr','class=','/div']
         for word, pos in pos_tags:
             if (pos in tags and word not in gabwords):
                 ret.append(word)
@@ -541,9 +541,9 @@ def webalgorithm(name):
                     for i in ners[j]:
                         if i.replace('Mr','') != '':
                             temp.append(i.replace('Mr',''))
-                    d[j] = collections.Counter(temp).most_common(4)
+                    d[j] = collections.Counter(temp).most_common(7)
                 else:
-                    d[j] = collections.Counter(ners[j]).most_common(4)
+                    d[j] = collections.Counter(ners[j]).most_common(7)
         nertype.append(d)
 
     finallist = []
@@ -610,7 +610,7 @@ def showwebpage(name):
     for i in range(0, len(t)):
         pos_tags = nltk.pos_tag(t[i][:8500])
         ret = []
-        gabwords = ['\'s', 'http', 'Inc.', 'url', 'i', 'year', 'URL', 'Mr']
+        gabwords = ['\'s', 'http', 'Inc.', 'url', 'i', 'year', 'URL', 'Mr','class=','/div']
         for word, pos in pos_tags:
             if (pos in tags and word not in gabwords):
                 ret.append(word)
@@ -669,7 +669,7 @@ def loadhistory():
                            db='mysql', charset="utf8")
     cur = conn.cursor()
     cur.execute("USE data")
-    cur.execute("create table if not exists historylist(id int not null AUTO_INCREMENT, name varchar(30), PRIMARY KEY (id))")
+    cur.execute("create table if not exists historylist(id int not null AUTO_INCREMENT, name varchar(30), numofword int, PRIMARY KEY (id))")
 
     sql = "select * from historylist"
     try:
@@ -695,7 +695,9 @@ def deletehistory():
     cur = conn.cursor()
     cur.execute("USE data")
     cur.execute("drop table if exists historylist")
-    cur.execute("create table if not exists historylist(id int not null AUTO_INCREMENT, name varchar(30), PRIMARY KEY (id))")
+    cur.execute("create table if not exists historylist(id int not null AUTO_INCREMENT, name varchar(30), numofword int, PRIMARY KEY (id))")
 
     cur.close()
     conn.close()
+
+

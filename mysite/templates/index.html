@@ -10,6 +10,7 @@
     <form action="/index/" method="post">
         人物姓名: <input type ="text" name="name"/>
         网页数量（默认120）: <input type ="text" value="120" name="pagenum"/>
+        网页最少词数（默认200, 只限聚合功能）: <input type ="text" value="200" name="numofword"/>
         功能：<select name="type">
             <option value="cluster">聚合人物信息</option>
             <option value="crawl">爬取人物网页</option>
@@ -54,13 +55,38 @@
                            <li>{{ lin.0 }}, {{ lin.1 }}</li>
                            {% endfor %}
                        </td>
-                       <td>{% for key,value in line.ner.items %}
-                           <li>{{ key }}: {% for lin in value %}
-                           <p>{{ lin.0 }}, {{ lin.1 }}</p>
-                           {% endfor %}</li>
-                           {% endfor %}</td>
+                       <td>
+                           <select id="ner-select-{{ line.no }}"  onchange='choose("{{ line.no }}");'>
+                                <option value="1">隐藏</option>
+                                <option value="2">显示</option>
+                           </select>
+                           <script>
+                            function choose(h){
+
+                                if(document.getElementById("ner-select-" + h).value=='1')
+                                {
+                                    document.getElementById('ner-' + h).style.display='none';
+                                }
+                                else if(document.getElementById("ner-select-" + h).value=='2')
+                                {
+                                    document.getElementById('ner-' + h).style.display='block';
+                                }
+                            };
+                            </script>
+
+                            <div id="ner-{{ line.no }}" style="display:none">
+                                {% for key,value in line.ner.items %}
+                                    <li>{{ key }}:
+                                        {% for lin in value %}
+                                            <p>{{ lin.0 }}, {{ lin.1 }}</p>
+                                        {% endfor %}</li>
+                                {% endfor %}
+                            </div>
+                       </td>
                    </tr>
                {% endfor %}
+
+
            </tbody>
     </table>
     <table border="1">

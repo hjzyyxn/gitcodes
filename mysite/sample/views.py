@@ -9,6 +9,7 @@ import time
 import random
 import pymysql
 import ssl
+import json
 import urllib2
 from bs4 import BeautifulSoup
 import re
@@ -33,42 +34,200 @@ name_list = []
 def index(request):
     #return HttpResponse("hello world!")
     if request.method == "POST":
-        if request.POST.get("delete") == "删除":
-            deletehistory()
-            name_list = loadhistory()
-            return render(request, "index.html", {"namels": name_list})
-        else:
-            name = request.POST.get("name", None)
-            pagenum = request.POST.get("pagenum", None)
-            numofword = request.POST.get("numofword", None)
-            type = request.POST.get("type", None)
+        file_obj = request.FILES.get('crawlfile', None)
+        if file_obj:
+            pagenum2 = request.POST.get("pagenum2", None)
+            crawllist = handle_uploaded_file(file_obj)
+            crawlnameinfile(crawllist, pagenum2)
+            for i in crawllist:
+                savehistory(i)
+        name = request.POST.get("name", None)
+        pagenum = request.POST.get("pagenum", None)
+        numofword = request.POST.get("numofword", None)
+        type = request.POST.get("type", None)
+        if name:
             savehistory(name)
-            name_list = loadhistory()
-            if type == 'crawl':
-                webcrawler(name, pagenum)
-                webparse(name)
-                finallist, unuselist = showwebpage(name)
-                return render(request, "crawl.html", {"data": finallist, "unuse": unuselist, "namels": name_list})
-            else:
-                webcrawler(name,pagenum)
-                webparse(name)
-                webmanipulate(name, numofword)
-                finallist, unuselist = webalgorithm(name)
-                return render(request, "index.html", {"data": finallist, "unuse": unuselist,"namels": name_list})
+        name_list = loadhistory()
+        if type == 'crawl':
+            webcrawler(name, pagenum)
+            webparse(name)
+            finallist, unuselist = showwebpage(name)
+            return render(request, "crawl.html", {"data": finallist, "unuse": unuselist, "namels": name_list})
+        elif type == 'cluster':
+            webcrawler(name,pagenum)
+            webparse(name)
+            webmanipulate(name, numofword)
+            finallist, unuselist = webalgorithm(name)
+            return render(request, "index.html", {"data": finallist, "unuse": unuselist,"namels": name_list})
     if request.method == "GET":
+
         if not request.GET:
             name_list = loadhistory()
             return render(request, "index.html", {"namels": name_list})
 
-        name = request.GET['name']
-        name = name[1:-1]
-        print name
+        else:
+            name = request.GET['name']
+            print name
+            if name[1:-1] == 'delete':
+                deletehistory()
+                name_list = loadhistory()
+                return render(request, "index.html", {"namels": name_list})
+            else:
+                name = name[1:-1]
+                print name
+                name_list = loadhistory()
+                webmanipulate(name, 200)
+                finallist, unuselist, numlist = webalgorithm(name)
+                return render(request, "index.html", {"data": finallist, "unuse": unuselist, "namels": name_list, "List": numlist, "dict": json.dumps(finallist)})
+            name_list = loadhistory()
+            return render(request, "index.html", {"namels": name_list})
+
+def input(request):
+    #return HttpResponse("hello world!")
+    if request.method == "POST":
+        name = request.POST.get("name", None)
+        pagenum = request.POST.get("pagenum", None)
+        numofword = request.POST.get("numofword", None)
+        type = request.POST.get("type", None)
+        if name:
+            savehistory(name)
         name_list = loadhistory()
-        webmanipulate(name, 200)
-        finallist, unuselist = webalgorithm(name)
-        return render(request, "index.html", {"data": finallist, "unuse": unuselist, "namels": name_list})
-    name_list = loadhistory()
-    return render(request, "index.html", {"namels": name_list})
+
+        webcrawler(name,pagenum)
+        webparse(name)
+        webmanipulate(name, numofword)
+        finallist, unuselist, numlist = webalgorithm(name)
+        return render(request, "input.html",
+                      {"data": finallist, "unuse": unuselist, "namels": name_list, "List": numlist,
+                       "dict": json.dumps(finallist)})
+    elif request.method == "GET":
+
+        if not request.GET:
+            name_list = loadhistory()
+            return render(request, "input.html", {"namels": name_list})
+
+        else:
+            name = request.GET['name']
+            print name
+            if name[1:-1] == 'delete':
+                deletehistory()
+                name_list = loadhistory()
+                return render(request, "input.html", {"namels": name_list})
+            else:
+                name = name[1:-1]
+                print name
+                name_list = loadhistory()
+                webmanipulate(name, 200)
+                finallist, unuselist, numlist = webalgorithm(name)
+                return render(request, "index.html",
+                              {"data": finallist, "unuse": unuselist, "namels": name_list, "List": numlist,
+                               "dict": json.dumps(finallist)})
+            name_list = loadhistory()
+            return render(request, "input.html", {"namels": name_list})
+
+def file(request):
+    #return HttpResponse("hello world!")
+    if request.method == "POST":
+        file_obj = request.FILES.get('crawlfile', None)
+        pagenum2 = request.POST.get("pagenum2", None)
+        crawllist = handle_uploaded_file(file_obj)
+        crawlnameinfile(crawllist, pagenum2)
+        for i in crawllist:
+            savehistory(i)
+        name_list = loadhistory()
+        stringmessage = "爬取成功"
+        return render(request, "file.html", {"namels": name_list, "strmessage":stringmessage})
+    if request.method == "GET":
+
+        if not request.GET:
+            name_list = loadhistory()
+            return render(request, "file.html", {"namels": name_list})
+
+        else:
+            name = request.GET['name']
+            print name
+            if name[1:-1] == 'delete':
+                deletehistory()
+                name_list = loadhistory()
+                return render(request, "index.html", {"namels": name_list})
+            else:
+                name = name[1:-1]
+                print name
+                name_list = loadhistory()
+                webmanipulate(name, 200)
+                finallist, unuselist, numlist = webalgorithm(name)
+                return render(request, "index.html",
+                              {"data": finallist, "unuse": unuselist, "namels": name_list, "List": numlist,
+                               "dict": json.dumps(finallist)})
+            name_list = loadhistory()
+            return render(request, "file.html", {"namels": name_list})
+
+def crawl(request):
+    #return HttpResponse("hello world!")
+    if request.method == "POST":
+        name = request.POST.get("name", None)
+        pagenum = request.POST.get("pagenum", None)
+        numofword = request.POST.get("numofword", None)
+        type = request.POST.get("type", None)
+        if name:
+            savehistory(name)
+        name_list = loadhistory()
+
+        webcrawler(name, pagenum)
+        webparse(name)
+        finallist, unuselist = showwebpage(name)
+        return render(request, "crawl.html", {"data": finallist, "unuse": unuselist, "namels": name_list})
+
+    if request.method == "GET":
+
+        if not request.GET:
+            name_list = loadhistory()
+            return render(request, "crawl.html", {"namels": name_list})
+
+        else:
+            name = request.GET['name']
+            print name
+            if name[1:-1] == 'delete':
+                deletehistory()
+                name_list = loadhistory()
+                return render(request, "crawl.html", {"namels": name_list})
+            else:
+                name = name[1:-1]
+                print name
+                name_list = loadhistory()
+                webmanipulate(name, 200)
+                finallist, unuselist, numlist = webalgorithm(name)
+                return render(request, "index.html", {"data": finallist, "unuse": unuselist, "namels": name_list, "List": numlist, "dict": json.dumps(finallist)})
+            name_list = loadhistory()
+            return render(request, "crawl.html", {"namels": name_list})
+
+
+def welcome(request):
+    #return HttpResponse("hello world!")
+    if request.method == "GET":
+
+        if not request.GET:
+            name_list = loadhistory()
+            return render(request, "welcome.html", {"namels": name_list})
+
+        else:
+            name = request.GET['name']
+            print name
+            if name[1:-1] == 'delete':
+                deletehistory()
+                name_list = loadhistory()
+                return render(request, "welcome.html", {"namels": name_list})
+            else:
+                name = name[1:-1]
+                print name
+                name_list = loadhistory()
+                webmanipulate(name, 200)
+                finallist, unuselist, numlist = webalgorithm(name)
+                return render(request, "index.html",
+                              {"data": finallist, "unuse": unuselist, "namels": name_list, "List": numlist,
+                               "dict": json.dumps(finallist)})
+            name_list = loadhistory()
+            return render(request, "welcome.html", {"namels": name_list})
 
 def webcrawler(name,pagenum):
 # Or MagicGoogle()
@@ -547,15 +706,18 @@ def webalgorithm(name):
         nertype.append(d)
 
     finallist = []
+    numlist=[]
     for i in range(0, len(clusterresult)):
         temp = dict()
-        temp['no'] = i
+        temp['no'] = i + 1
         temp['netaddress'] = addresslist[i]
         temp['words'] = finalwordresult[i]
         temp['ner'] = nertype[i]
         finallist.append(temp)
+        numlist.append(len(clusterresult[i]))
 
-    return finallist, unuselist
+    print numlist
+    return finallist, unuselist, numlist
 
 def showwebpage(name):
     tablename = name.replace(' ', '').lower()
@@ -640,7 +802,7 @@ def showwebpage(name):
     finallist = []
     for i in range(0, len(stringdata)):
         temp = dict()
-        temp['no'] = i
+        temp['no'] = i + 1
         temp['netaddress'] = addresslist[i]
         temp['words'] = finalwordresult[i]
         temp['ner'] = nertype[i]
@@ -701,3 +863,24 @@ def deletehistory():
     conn.close()
 
 
+def handle_uploaded_file(f):
+    file_name = ""
+    tempstring=""
+    try:
+        path = "static/temp" + time.strftime('/%Y/%m/%d/%H/%M/%S/')
+        if not os.path.exists(path):
+            os.makedirs(path)
+            file_name = path + f.name
+            destination = open(file_name, 'wb+')
+            for chunk in f.chunks():
+                tempstring += chunk
+                destination.write(chunk)
+            destination.close()
+            return tempstring.split(',')
+    except Exception, e:
+        print e
+
+def crawlnameinfile(list, pagenum):
+    for i in list:
+        webcrawler(i, pagenum)
+        webparse(i)

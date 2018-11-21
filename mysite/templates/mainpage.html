@@ -1,0 +1,376 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% block addon-ng-bind %}
+{% endblock %}
+
+
+{% block title %}
+
+{% endblock %}
+
+
+{% block content-header %}
+    {% verbatim %}
+
+    <h1>
+        数据分析
+        <small>数据检索</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/"><i class="fa fa-dashboard"></i> 首页</a></li>
+    </ol>
+    {% endverbatim %}
+{% endblock %}
+
+{% block content-content %}
+    {% verbatim %}
+    <div ng-app="indexPage" ng-cloak>
+        <!-- 高大上的搜索框 -->
+        <div class="box">
+            <!-- 专业占位 -->
+            <div class="col-xs-2"></div>
+            <!-- 搜索框 -->
+            <div class="col-xs-8">
+                <div class="box-body" ng-controller="searchController" ng-init="flag=1">
+                    <div class="input-group margin">
+                        <!--<input ng-if="flag" type="text" ng-model="queryEs.query" class="form-control"
+                               uib-typeahead=" hit._source.fullName for hit in getPeople($viewValue)"
+                               placeholder="请输入人物信息搜索">-->
+                        <input ng-if="flag" type="text" ng-model="queryEs.query" class="form-control"
+                               uib-typeahead=" hit._source.name for hit in getTech($viewValue)"
+                               placeholder="请输入技术信息分析"
+                               ng-keydown="keydown($event)"
+                        >
+                        <!--<input ng-if="flag" type="text" ng-model="queryEs.query" class="form-control" placeholder="请输入技术信息分析" ng-keydown="keydown($event)" />-->
+                        <!--<input ng-if="!flag" type="text" ng-model="queryEs.query" class="form-control"-->
+                               <!--uib-typeahead=" hit._source.fullName for hit in getOrg($viewValue)"-->
+                               <!--placeholder="请输入机构信息搜索">-->
+                        <span class="input-group-btn">
+                            <button class="btn btn-info btn-flat" type="button" ng-click="doSearch()">
+                                分析
+                            </button>
+                            <!--<button class="btn" ng-click="changeFlag()">-->
+                                <!--<i class="fa fa-fw fa-retweet fa-md"></i>-->
+                                <!--<span>切换</span>-->
+                            <!--</button>-->
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <!-- 专业占位 -->
+            <div class="col-xs-2"></div>
+            <!-- 撑起元素 -->
+            <div class="box-footer">&nbsp;</div>
+        </div>
+
+
+        <div ng-controller="techCtrl" ng-cloak class="ng-cloak">
+            <div class="box">
+                <div class="box-header" style="height: 50px;line-height: 38px;">
+                    <h3 class="box-title">热点专题</h3>
+                    <div class="box-tools pull-right">
+                        <a href="/da/search/tech/" class="small-box-footer">更多 <i class="fa fa-arrow-circle-right"></i></a>
+                    </div>
+                </div>
+                <div class="box-body no-padding">
+                    <div class="col-md-4" ng-repeat="card in cards track by $index" id="{{ card.id }}">
+                        <div class="box box-info">
+                            <div class="box-header"><i class="fa fa-book"></i><h3 class="box-title">{{ card.title }}（{{ card.eng }}）</h3></div>
+                            <div class="box-body">
+                                <div class="col-md-8"><a href="{{ card.link }}" target="_blank"><img src="{{ card.img }}" style="width: 100%; height: 80%"></a></div>
+                                <div class="col-md-4 no-padding" style="word-wrap: break-word; overflow: hidden">
+                                    <p style="font-size: 10px">{{ card.title }}，<br>{{ card.description }}</p>
+                                </div>
+                                <a href="{{ card.link }}" target="_blank" style="float: right">详细信息&nbsp;&nbsp;</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="box-footer">
+                    <a href="/da/search/tech/" class="small-box-footer">更多 <i class="fa fa-arrow-circle-right"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 轮播滑动窗口 -->
+
+            <div class="box">
+                <div class="box-body">
+                    <div class="col-md-6">
+                        <!-- 显示人的滑动窗口 -->
+                        <div class="box box-info">
+                                <div class="box-header">
+                                    <i class="fa fa-clipboard"></i>
+                                    <h3 class="box-title">热点人物</h3>
+                                </div>
+                                <div class="box-body">
+                                    <!-- 从es里面检索出来最新添加的10个人物 -->
+                                    <div eui-index="'person'" eui-sort="ejs.Sort('photoWebUrl').order('desc')" eui-enabled="true"
+                                         ng-controller="peopleController">
+                                        <div id="firstCarousel" class="carousel slide" data-ride="carousel" data-wrap="true" data-interval="3000">
+                                            <!-- 轮播（Carousel）指标 -->
+                                            <ol class="carousel-indicators">
+                                                <li data-target="#firstCarousel"
+                                                    ng-repeat-start="doc in indexVM.results.hits.hits track by $index"
+                                                    data-slide-to="{{ $index }}" class="active" ng-if="$first"></li>
+                                                <li data-target="#firstCarousel" ng-repeat-end data-slide-to="{{ $index }}"
+                                                    ng-if="!$first"></li>
+                                            </ol>
+                                            <!-- 轮播（Carousel）项目 -->
+                                            <div class="carousel-inner">
+                                                <a href="javascript:void(0);" >
+                                                    <div class="small-box bg-light-gray">
+                                                        <div class="inner col-xs-12" style="color: #0c0c0c">
+                                                            <div class="col-xs-2">
+                                                                <img ng-if="!doc._source.photoWebUrl[0]"
+                                                                     src="/static/person/asif_hossain.jpg"
+                                                                     style="width: 100%;margin-top: 20px"/>
+                                                                <img ng-if="doc._source.photoWebUrl[0]" src="{{ doc._source.photoWebUrl[0] }}"
+                                                                     style="width: 100%;margin-top: 20px">
+                                                            </div>
+                                                            <div class="col-xs-10">
+                                                                <h4>Asif Hossain</h4>
+                                                                <p ng-if="doc._source.currentTitle[0]"><strong>{{ doc._source.currentTitle[0].value }}</strong>
+                                                                    <strong ng-repeat="x in doc._source.currentTitle.slice(1) track by $index" ng-if="x.value">,&nbsp;{{ x.value }}</strong>
+                                                                </p>
+                                                                <p>
+                                                                    <span>Senior Director, Engineering, Qualcomm Inc.</span>
+                                                                    <span >&nbsp;Senior Director, Engineering, Qualcomm Inc.</span>
+                                                                </p>
+                                                                <p>
+                                                                    <span >US&nbsp;&nbsp;</span>
+                                                                    <span >CA&nbsp;&nbsp;</span>
+                                                                    <span >San Diego&nbsp;&nbsp;</span>
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <div class="small-box-footer">&nbsp;</div>
+                                                    </div>
+                                                </a>
+                                                <a href="javascript:void(0);" class="item" ng-repeat-end ng-if="!$first"
+                                                   ng-click="peopleDetail(doc._source.uuid)">
+                                                    <div class="small-box bg-light-gray">
+                                                        <div class="inner col-xs-12" style="color: #0c0c0c">
+                                                            <div class="col-xs-2">
+                                                                <img ng-if="!doc._source.photoWebUrl[0]"
+                                                                     src="/static/person/asif_hossain.jpg"
+                                                                     style="width: 100%;margin-top: 20px"/>
+                                                                <img ng-if="doc._source.photoWebUrl[0]" src="{{ doc._source.photoWebUrl[0] }}"
+                                                                     style="width: 100%;margin-top: 20px">
+                                                            </div>
+                                                            <div class="col-xs-10">
+                                                                <h4>{{ doc._source.fullName }}</h4>
+                                                                <p ng-if="doc._source.currentTitle[0]"><strong>{{ doc._source.currentTitle[0].value }}</strong>
+                                                                    <strong ng-repeat="x in doc._source.currentTitle.slice(1) track by $index" ng-if="x.value">,&nbsp;{{ x.value }}</strong>
+                                                                </p>
+                                                                <p ng-if="doc._source.currentCompany[0]">
+                                                                    <span>{{ doc._source.currentCompany[0].value }}</span>
+                                                                    <span ng-repeat="org in doc._source.currentCompany.slice(1) track by $index" ng-if="org.value">&nbsp;{{ org.value }}</span>
+                                                                </p>
+                                                                <p>
+                                                                    <span ng-if="doc._source.addresses[0].country">{{ doc._source.addresses[0].country }}&nbsp;&nbsp;</span>
+                                                                    <span ng-if="doc._source.addresses[0].state">{{ doc._source.addresses[0].state }}&nbsp;&nbsp;</span>
+                                                                    <span ng-if="doc._source.addresses[0].city">{{ doc._source.addresses[0].city }}&nbsp;&nbsp;</span>
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <div class="small-box-footer">&nbsp;</div>
+                                                    </div>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="box-footer">
+                                    <a href="/da/search/people/" class="small-box-footer">更多 <i class="fa fa-arrow-circle-right"></i></a>
+                                </div>
+                            </div>
+                    </div>
+                    <div class="col-md-6">
+                        <!-- 显示机构的滑动窗口 -->
+                        <div class="box box-info">
+                            <div class="box box-info">
+                                <div class="box-header">
+                                    <i class="fa fa-clipboard"></i>
+                                    <h3 class="box-title">热点机构</h3>
+                                </div>
+                                <div class="box-body">
+                                    <!-- 从es里面检索出来最新添加的10个机构 -->
+                                    <div >
+                                        <div id="secondCarousel" class="carousel slide" data-ride="carousel" data-wrap="true" data-interval="4000">
+                                            <!-- 轮播（Carousel）指标 -->
+                                            <ol class="carousel-indicators">
+                                                <li data-target="#secondCarousel"
+                                                ></li>
+                                                <li data-target="#secondCarousel" ></li>
+                                            </ol>
+                                            <!-- 轮播（Carousel）项目 -->
+                                            <div class="carousel-inner">
+                                                <a href="javascript:void(0);">
+                                                    <div class="small-box bg-light-gray">
+                                                        <div class="inner col-xs-12" style="color: #0c0c0c">
+                                                            <div class="col-xs-2">
+                                                                <img ng-if="!doc._source.photoWebUrl[0]"
+                                                                     src="/static/person/building.jpg"
+                                                                     style="width: 100%;margin-top: 20px"/>
+                                                                <img ng-if="doc._source.photoWebUrl[0]" src="{{ doc._source.photoWebUrl[0] }}"
+                                                                     style="width: 100%;margin-top: 20px">
+                                                            </div>
+                                                            <div class="col-xs-10">
+                                                                <h4>Cantega Technologies Inc.</h4>
+                                                                <p ><strong></strong>
+                                                                    <strong ></strong>
+                                                                </p>
+                                                                <p ng-if="doc._source.kind">{{ doc._source.kind }}</p>
+                                                                <p>
+                                                                    <span >CA&nbsp;&nbsp;</span>
+                                                                    <span >Edmonton</span>
+                                                                    <span>&nbsp;&nbsp;</span>
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <div class="small-box-footer">&nbsp;</div>
+                                                    </div>
+                                                </a>
+                                                <a href="javascript:void(0);" class="item" ng-repeat-end ng-if="!$first"
+                                                   ng-click="orgDetail(doc._source.uuid)">
+                                                    <div class="small-box bg-light-gray">
+                                                        <div class="inner col-xs-12" style="color: #0c0c0c">
+                                                            <div class="col-xs-2">
+                                                                <img ng-if="!doc._source.photoWebUrl[0]"
+                                                                     src="http://{{ apacheUrl }}/company/default.jpg"
+                                                                     style="width: 100%;margin-top: 20px"/>
+                                                                <img ng-if="doc._source.photoWebUrl[0]" src="{{ doc._source.photoWebUrl[0] }}"
+                                                                     style="width: 100%;margin-top: 20px">
+                                                            </div>
+                                                            <div class="col-xs-10">
+                                                                <h4>{{ doc._source.fullName }}</h4>
+                                                                <p ng-if="doc._source.industry[0]"><strong>{{ doc._source.industry[0] }}</strong>
+                                                                    <strong ng-repeat="x in doc._source.industry.slice(1) track by $index" ng-if="x">,&nbsp;{{ x }}</strong>
+                                                                </p>
+                                                                <p ng-if="doc._source.kind">{{ doc._source.kind }}</p>
+                                                                <p>
+                                                                    <span ng-if="doc._source.addresses[0].country">{{ doc._source.addresses[0].country }}&nbsp;&nbsp;</span>
+                                                                    <span ng-if="doc._source.addresses[0].state">{{ doc._source.addresses[0].state }}&nbsp;&nbsp;</span>
+                                                                    <span ng-if="doc._source.addresses[0].city">{{ doc._source.addresses[0].city }}&nbsp;&nbsp;</span>
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <div class="small-box-footer">&nbsp;</div>
+                                                    </div>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="box-footer">
+                                    <a href="/da/search/organization/" class="small-box-footer">更多<i class="fa fa-arrow-circle-right"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+
+        <!-- 显示es中人物和机构中数据的数目 -->
+        <div ng-controller="numController">
+            <div class="box box-primary">
+                <div class="box-header">
+                    <div class="box-title"></div>
+                </div>
+                <div class="box-body">
+                    <div class="container">
+                        <div class="col-md-1 col-sm-6 col-xs-12"></div>
+                        <div class="col-md-2 col-sm-6 col-xs-12">
+                            <div class="counters rounded" style="background:rgba(240, 240, 240, 0.9); border-bottom: 2px solid #ddd; padding: 10px; color: #555; text-align: center; border-radius: 4px !important;">
+                                <span class="counter ng-binding" style="color: #555; font-family:'Open Sans',Arial,sans-serif; font-weight:200; font-size:23px" >{{pplAmount}}</span>
+                                <h4 class="font-normal ng-binding">Researchers</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-sm-6 col-xs-12">
+                            <div class="counters rounded" style="background:rgba(240, 240, 240, 0.9); border-bottom: 2px solid #ddd; padding: 10px; color: #555; text-align: center; border-radius: 4px !important;">
+                                <span class="counter ng-binding" style="color: #555; font-family:'Open Sans',Arial,sans-serif; font-weight:200; font-size:23px">{{orgAmount}}</span>
+                                <h4 class="font-normal ng-binding">Organizations</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-sm-6 col-xs-12">
+                            <div class="counters rounded" style="background:rgba(240, 240, 240, 0.9); border-bottom: 2px solid #ddd; padding: 10px; color: #555; text-align: center; border-radius: 4px !important;">
+                                <span class="counter ng-binding" style="color: #555; font-family:'Open Sans',Arial,sans-serif; font-weight:200; font-size:23px">{{patAmount}}</span>
+                                <h4 class="font-normal ng-binding">Patents</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-sm-6 col-xs-12">
+                            <div class="counters rounded" style="background:rgba(240, 240, 240, 0.9); border-bottom: 2px solid #ddd; padding: 10px; color: #555; text-align: center; border-radius: 4px !important;">
+                                <span class="counter ng-binding" style="color: #555; font-family:'Open Sans',Arial,sans-serif; font-weight:200; font-size:23px">{{pubAmount}}</span>
+                                <h4 class="font-normal ng-binding">Papers</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-sm-6 col-xs-12">
+                            <div class="counters rounded" style="background:rgba(240, 240, 240, 0.9); border-bottom: 2px solid #ddd; padding: 10px; color: #555; text-align: center; border-radius: 4px !important;">
+                                <span class="counter ng-binding" style="color: #555; font-family:'Open Sans',Arial,sans-serif; font-weight:200; font-size:23px">{{fundAmount}}</span>
+                                <h4 class="font-normal ng-binding">Funds</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="box-footer">
+                    <div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endverbatim %}
+
+{% endblock %}
+
+
+
+{% block popup-modal %}
+
+
+{% endblock %}
+
+
+
+
+{% block addon-script %}
+    <script type="application/javascript">
+        var thousandBitSeparator = function(numStr){
+             var re=/(?=(?!(\b))(\d{3})+$)/g;
+             numStr=numStr.replace(re,",");
+             return numStr
+         }
+        var esUrl = '{{ esUrl }}';
+        var apacheUrl = '{{ apacheUrl }}';
+        var orgAmount = thousandBitSeparator(String({{orgAmount}}));
+        var pplAmount = thousandBitSeparator(String({{pplAmount}}));
+        var patAmount = thousandBitSeparator(String({{patAmount}}));
+        var fundAmount = thousandBitSeparator(String({{fundAmount}}));
+        var pubAmount = thousandBitSeparator(String({{pubAmount}}));
+    </script>
+    <script src="{% static 'js/elastic.js' %}" type="text/javascript"></script>
+    <script src="{% static 'js/elasticsearch.angular.js' %}" type="text/javascript"></script>
+    <script src="{% static 'js/elasticui.js' %}" type="text/javascript"></script>
+    <script type="text/javascript" src="/static/js/temp/index1.js"></script>
+    <script src="{% static 'js/ui-bootstrap-tpls-2.2.0.min.js' %}" type="application/javascript"></script>
+    <script type="text/javascript">
+    window.onload = function () {
+        var h = [];
+        for (var i=0; i<5; i++){
+            h[i] = document.getElementById(i).clientHeight;
+        }
+        var high = Math.max.apply(Math, h);
+        for (i=0; i<5; i++){
+            document.getElementById(i).style.height = high + "px";
+        }
+    }
+    </script>
+{% endblock %}
+
+
+{% block addon-include %}
+
+{% endblock %}

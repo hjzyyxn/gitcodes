@@ -229,6 +229,33 @@ def welcome(request):
             name_list = loadhistory()
             return render(request, "welcome.html", {"namels": name_list})
 
+def mainpage(request):
+    #return HttpResponse("hello world!")
+    if request.method == "GET":
+
+        if not request.GET:
+            name_list = loadhistory()
+            return render(request, "mainpage.html", {"namels": name_list})
+
+        else:
+            name = request.GET['name']
+            print name
+            if name[1:-1] == 'delete':
+                deletehistory()
+                name_list = loadhistory()
+                return render(request, "mainpage.html", {"namels": name_list})
+            else:
+                name = name[1:-1]
+                print name
+                name_list = loadhistory()
+                webmanipulate(name, 200)
+                finallist, unuselist, numlist = webalgorithm(name)
+                return render(request, "index.html",
+                              {"data": finallist, "unuse": unuselist, "namels": name_list, "List": numlist,
+                               "dict": json.dumps(finallist)})
+            name_list = loadhistory()
+            return render(request, "mainpage.html", {"namels": name_list})
+
 def webcrawler(name,pagenum):
 # Or MagicGoogle()
     mg = MagicGoogle()

@@ -21,6 +21,8 @@ import numpy as np
 import pandas as pd
 import codecs
 from collections import defaultdict
+import datetime
+import time
 import collections
 from nltk.stem.snowball import SnowballStemmer
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -78,7 +80,7 @@ def index(request):
                 name_list = loadhistory()
                 webmanipulate(name, 200)
                 finallist, unuselist, numlist = webalgorithm(name)
-                return render(request, "index.html", {"data": finallist, "unuse": unuselist, "namels": name_list, "List": numlist, "dict": json.dumps(finallist)})
+                return render(request, "index.html", {"data": finallist, "unuse": unuselist, "namels": name_list, "List": numlist, "peoplename": name, "dict": json.dumps(finallist)})
             name_list = loadhistory()
             return render(request, "index.html", {"namels": name_list})
 
@@ -202,13 +204,19 @@ def crawl(request):
             return render(request, "crawl.html", {"namels": name_list})
 
 
-def welcome(request):
-    #return HttpResponse("hello world!")
+def autocrawl(request):
+    if request.method == "POST":
+        name_list = loadhistory()
+        autocrawllist = request.POST.getlist("autocrawl", None)
+        autoday = request.POST.get("autoday", None)
+        autotimes = request.POST.get("autotimes", None)
+        waittime(autoday, autotimes, autocrawllist)
+        return render(request, "autocrawl.html", {"namels": name_list})
     if request.method == "GET":
 
         if not request.GET:
             name_list = loadhistory()
-            return render(request, "welcome.html", {"namels": name_list})
+            return render(request, "autocrawl.html", {"namels": name_list})
 
         else:
             name = request.GET['name']
@@ -216,7 +224,7 @@ def welcome(request):
             if name[1:-1] == 'delete':
                 deletehistory()
                 name_list = loadhistory()
-                return render(request, "welcome.html", {"namels": name_list})
+                return render(request, "autocrawl.html", {"namels": name_list})
             else:
                 name = name[1:-1]
                 print name
@@ -227,7 +235,7 @@ def welcome(request):
                               {"data": finallist, "unuse": unuselist, "namels": name_list, "List": numlist,
                                "dict": json.dumps(finallist)})
             name_list = loadhistory()
-            return render(request, "welcome.html", {"namels": name_list})
+            return render(request, "autocrawl.html", {"namels": name_list})
 
 def mainpage(request):
     #return HttpResponse("hello world!")
@@ -911,3 +919,21 @@ def crawlnameinfile(list, pagenum):
     for i in list:
         webcrawler(i, pagenum)
         webparse(i)
+
+
+
+
+def waittime(day, times, list):
+    temp = 0
+    while True:
+        while temp < times:
+            now = datetime.datetime.now()
+            if now.hour == 1 and now.minute == 0:
+                for i in list:
+                    webcrawler(i[1:-1], 150)
+                    webparse(i)
+                time.sleep(86400 * day)
+                temp = temp + 1
+            time.sleep(20)
+
+

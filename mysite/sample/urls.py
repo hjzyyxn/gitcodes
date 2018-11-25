@@ -7,6 +7,6 @@ urlpatterns = [
     url(r'^crawl/', views.crawl, name='crawl'),
     url(r'^file/', views.file, name='file'),
     url(r'^input/', views.input, name='input'),
-    url(r'^welcome/', views.welcome, name='welcome'),
+    url(r'^autocrawl/', views.autocrawl, name='autocrawl'),
     url(r'^mainpage/', views.mainpage, name='mainpage'),
 ]

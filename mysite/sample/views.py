@@ -78,8 +78,13 @@ def index(request):
                 name = name[1:-1]
                 print name
                 name_list = loadhistory()
-                webmanipulate(name, 200)
-                finallist, unuselist, numlist = webalgorithm(name)
+                if (table_exists(name) != 1):
+                    print "webalgorithm"
+                    webmanipulate(name, 200)
+                    finallist, unuselist, numlist = webalgorithm(name)
+                else:
+                    print "showresult"
+                    finallist, unuselist, numlist = showresult(name)
                 return render(request, "index.html", {"data": finallist, "unuse": unuselist, "namels": name_list, "List": numlist, "peoplename": name, "dict": json.dumps(finallist)})
             name_list = loadhistory()
             return render(request, "index.html", {"namels": name_list})
@@ -263,6 +268,50 @@ def mainpage(request):
                                "dict": json.dumps(finallist)})
             name_list = loadhistory()
             return render(request, "mainpage.html", {"namels": name_list})
+
+
+def testhtml(request):
+    #return HttpResponse("hello world!")
+    if request.method == "POST":
+        name = request.POST.get("name", None)
+        pagenum = request.POST.get("pagenum", None)
+        numofword = request.POST.get("numofword", None)
+        type = request.POST.get("type", None)
+        if name:
+            savehistory(name)
+        name_list = loadhistory()
+
+        webcrawler(name,pagenum)
+        webparse(name)
+        webmanipulate(name, numofword)
+        finallist, unuselist, numlist = webalgorithm(name)
+        return render(request, "htmltest.html",
+                      {"data": finallist, "unuse": unuselist, "namels": name_list, "List": numlist,
+                       "dict": json.dumps(finallist)})
+    elif request.method == "GET":
+
+        if not request.GET:
+            name_list = loadhistory()
+            return render(request, "htmltest.html", {"namels": name_list})
+
+        else:
+            name = request.GET['name']
+            print name
+            if name[1:-1] == 'delete':
+                deletehistory()
+                name_list = loadhistory()
+                return render(request, "htmltest.html", {"namels": name_list})
+            else:
+                name = name[1:-1]
+                print name
+                name_list = loadhistory()
+                webmanipulate(name, 200)
+                finallist, unuselist, numlist = webalgorithm(name)
+                return render(request, "index.html",
+                              {"data": finallist, "unuse": unuselist, "namels": name_list, "List": numlist,
+                               "dict": json.dumps(finallist)})
+            name_list = loadhistory()
+            return render(request, "htmltest.html", {"namels": name_list})
 
 def webcrawler(name,pagenum):
 # Or MagicGoogle()
@@ -581,7 +630,7 @@ def webalgorithm(name):
 
     purepage = []
     unpurepage = []
-    for i in range(0 ,len(nums)):          #fen li chun du
+    for i in range(0 ,len(nums)):
         if reac[i] in pure:
             purepage.append(nums[i])
         else:
@@ -651,6 +700,7 @@ def webalgorithm(name):
 
 
     print ('clusterresult', clusterresult)
+    saveclusterresult(tablename, clusterresult)
 
     conn = pymysql.connect(host = '127.0.0.1', port = 3306, user = 'root',password="123",
                         db = 'mysql', charset="utf8")
@@ -721,7 +771,7 @@ def webalgorithm(name):
 
 
 
-    gabner = ['DATE', 'MONEY', 'PERCENT']
+    gabner = ['ORGANIZATION', 'LOCATION', 'PERSON']
     import ner
     tagger=ner.SocketNER(host='localhost',port=8080)
     nertype = []
@@ -729,7 +779,7 @@ def webalgorithm(name):
         ners=tagger.get_entities(i)
         d = dict()
         for j in ners:
-            if j not in gabner:
+            if j in gabner:
                 if j == 'PERSON':
                     temp = []
                     for i in ners[j]:
@@ -739,6 +789,7 @@ def webalgorithm(name):
                 else:
                     d[j] = collections.Counter(ners[j]).most_common(7)
         nertype.append(d)
+        print nertype
 
     finallist = []
     numlist=[]
@@ -751,8 +802,162 @@ def webalgorithm(name):
         finallist.append(temp)
         numlist.append(len(clusterresult[i]))
 
-    print numlist
+    print finallist
     return finallist, unuselist, numlist
+
+
+def showresult(name):
+    tablename = name.replace(' ', '').lower()
+    namelist = name.split(' ')
+    namelist.extend(name.upper().split('_'))
+    conn = pymysql.connect(host = '127.0.0.1', port = 3306, user = 'root',password="123",
+                        db = 'mysql', charset="utf8")
+
+    cur = conn.cursor()
+    cur.execute("USE data")
+
+    sql = "select id from " + tablename + "word"         #find pages that have enough words
+
+    try:
+        cur.execute(sql)
+        ranks = cur.fetchall()
+    except:
+        print "Error: unable to fetch data"
+
+    nums = []
+    for num in ranks:
+        nums.append(num[0])
+
+    clusterresult = loadclusterresult(tablename)
+
+    print ('clusterresult', clusterresult)
+
+    conn = pymysql.connect(host = '127.0.0.1', port = 3306, user = 'root',password="123",
+                        db = 'mysql', charset="utf8")
+
+    cur = conn.cursor()
+    cur.execute("USE data")
+    sql = "select * from " + tablename + "raw"
+
+    try:
+        cur.execute(sql)
+        wordresults = cur.fetchall()
+    except:
+        print "Error: unable to fetch data"
+
+    stopwords = nltk.corpus.stopwords.words('english')
+    def tokenize(text):
+        # first tokenize by sentence, then by word to ensure that punctuation is caught as it's own token
+        tokens = [word for sent in nltk.sent_tokenize(text) for word in nltk.word_tokenize(sent)]
+        filtered_tokens = []
+        # filter out any tokens not containing letters (e.g., numeric tokens, raw punctuation)
+        for token in tokens:
+            if re.search('[a-zA-Z]', token) and token not in stopwords:
+                filtered_tokens.append(token)
+        return filtered_tokens
+
+    t = []
+    clusterstring = []
+    addresslist = []
+    unuselist = []
+    try:
+        for i in clusterresult:
+            words = ""
+            temp = []
+            for row in wordresults:
+                if row[0] in clusterresult[i]:
+                    word = row[2]
+                    for ele in namelist:
+                        word = word.replace(ele, "")
+                    words += word
+                    temp.append(row[1])
+            clusterstring.append(words)
+            addresslist.append(temp)
+            t.append(tokenize(words))
+
+        for row in wordresults:
+            if row[0] not in nums:
+                unuselist.append(row[1])
+
+    finally:
+        cur.close()
+        conn.close()
+
+
+    tags = set(['NN', 'NNS', 'NNP', 'NNPS', 'VB', 'VBD', 'VBG', 'VBP', 'VNZ', 'VBN'])
+    tag = set(['PRP','PRP$','RB','VBZ','RBR','RBS','WDT','WP','WP$','WRB', 'VB', 'VBD', 'VBG', 'VBP'])
+
+    finalwordresult = []
+
+
+    for i in range(0, len(t)):
+        pos_tags = nltk.pos_tag(t[i][:8500])
+        ret = []
+        gabwords = ['\'s', 'http', 'Inc.', 'url', 'i', 'year', 'URL', 'Mr','class=','/div']
+        for word, pos in pos_tags:
+            if (pos in tags and word not in gabwords):
+                ret.append(word)
+        temp = collections.Counter(ret).most_common(10)
+        finalwordresult.append(temp)
+
+
+
+    gabner = ['ORGANIZATION', 'LOCATION', 'PERSON']
+    import ner
+    tagger=ner.SocketNER(host='localhost',port=8080)
+    nertype = []
+    for i in clusterstring:
+        ners=tagger.get_entities(i)
+        d = dict()
+        for j in ners:
+            if j in gabner:
+                if j == 'PERSON':
+                    temp = []
+                    for i in ners[j]:
+                        if i.replace('Mr','') != '':
+                            temp.append(i.replace('Mr',''))
+                    d[j] = collections.Counter(temp).most_common(7)
+                else:
+                    d[j] = collections.Counter(ners[j]).most_common(7)
+        nertype.append(d)
+
+
+    finallist = []
+    numlist=[]
+    for i in range(0, len(clusterresult)):
+        temp = dict()
+        temp['no'] = i + 1
+        temp['netaddress'] = addresslist[i]
+        temp['words'] = finalwordresult[i]
+        temp['ner'] = nertype[i]
+        finallist.append(temp)
+        numlist.append(len(clusterresult[i]))
+
+    return finallist, unuselist, numlist
+
+def loadclusterresult(tablename):
+    conn = pymysql.connect(host='127.0.0.1', port=3306, user='root', password="123",
+                           db='mysql', charset="utf8")
+
+    cur = conn.cursor()
+    cur.execute("USE data")
+    clusterresult = dict()
+    sql = "select * from " + tablename + "result"
+    try:
+        cur.execute(sql)
+        pageresult = cur.fetchall()
+    except:
+        print "Error: unable to fetch data"
+    try:
+        for row in pageresult:
+            if row[0] in clusterresult:
+                clusterresult[row[0]].append(row[1])
+            else:
+                clusterresult[row[0]] = [row[1]]
+        return clusterresult
+    finally:
+        cur.close()
+        conn.close()
 
 def showwebpage(name):
     tablename = name.replace(' ', '').lower()
@@ -814,7 +1019,7 @@ def showwebpage(name):
         temp = collections.Counter(ret).most_common(10)
         finalwordresult.append(temp)
 
-    gabner = ['DATE', 'MONEY', 'PERCENT']
+    gabner = ['ORGANIZATION', 'LOCATION', 'PERSON']
     import ner
     tagger = ner.SocketNER(host='localhost', port=8080)
     nertype = []
@@ -822,7 +1027,7 @@ def showwebpage(name):
         ners = tagger.get_entities(i)
         d = dict()
         for j in ners:
-            if j not in gabner:
+            if j in gabner:
                 if j == 'PERSON':
                     temp = []
                     for i in ners[j]:
@@ -937,3 +1142,42 @@ def waittime(day, times, list):
             time.sleep(20)
 
 
+def saveclusterresult(tablename, clusterresult):
+    conn = pymysql.connect(host='127.0.0.1', port=3306, user='root', password="123",
+                           db='mysql', charset="utf8")
+    cur = conn.cursor()
+    cur.execute("USE data")
+    cur.execute("drop table if exists " + tablename + "result")
+    sql_create = "create table " + tablename + "result" + " (id int not null, pageno int, PRIMARY KEY (pageno)) engine = innodb charset = utf8 "
+    cur.execute(sql_create)
+
+    try:
+        for i in clusterresult:
+            for j in clusterresult[i]:
+                cur.execute("insert into " + tablename + "result" + "(id, pageno) values (\"%s\",\"%s\")",
+                            (i, j))
+                cur.connection.commit()
+
+
+    finally:
+        cur.close()
+        conn.close()
+
+
+def table_exists(name):        #这个函数用来判断表是否存在
+    tablename = name.replace(' ', '').lower()
+    tablename += "result"
+    conn = pymysql.connect(host='127.0.0.1', port=3306, user='root', password="123",
+                           db='mysql', charset="utf8")
+    sql = "show tables;"
+    cur = conn.cursor()
+    cur.execute("USE data")
+    cur.execute(sql)
+    tables = [cur.fetchall()]
+    table_list = re.findall('(\'.*?\')',str(tables))
+    table_list = [re.sub("'",'',each) for each in table_list]
+    print table_list
+    if tablename in table_list:
+        return 1        #存在返回1
+    else:
+        return 0        #不存在返回0

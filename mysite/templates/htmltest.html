@@ -1,48 +1,362 @@
-{% extends 'base1.html' %}
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>test</title>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<title>人物信息聚合子系统</title>
+<meta name="description" content="">
+<meta name="keywords" content="">
+<link href="" rel="stylesheet">
+    <script type="text/javascript" src="/static/plugins/jQuery/jquery-3.3.1.min.js"></script>
+<script type="text/javascript" src="/static/bootstrap/dist/js/bootstrap.min.js"></script>
+
+<script type="text/javascript" src="/static/dist/js/adminlte.min.js"></script>
+<script src="/static/plugins/echarts/echarts.common.min.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/static/dist/css/AdminLTE.min.css">
+<link rel="stylesheet" type="text/css" href="/static/bootstrap/dist/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="/static/plugins/font-awesome/css/font-awesome.min.css">
+<link rel="stylesheet" type="text/css" href="/static/plugins/Ionicons/css/ionicons.min.css">
+<link rel="stylesheet" type="text/css" href="/static/dist/css/skins/skin-blue.min.css">
 </head>
-<body>
+<body class="hold-transition skin-blue sidebar-mini">
+<div class="wrapper">
 
-    <h1 style="background-color: antiquewhite;color:black;">请输入待查姓名，网页数量及信息展示效果</h1>
-    <form action="/index/" method="post" enctype="multipart/form-data">
-        自动爬取：<input type="file" name="crawlfile">
-        网页数量（默认120）: <input type ="text" value="120" name="pagenum2"/>
-        <input type="submit">
-    </form>
-    <hr style="height:1px;border:none;border-top:1px solid #555555;" />
-    <form action="/index/" method="post">
-        人物姓名: <input type ="text" name="name"/>
-        网页数量（默认120）: <input type ="text" value="120" name="pagenum"/>
-        网页最少词数（默认200, 只限聚合功能）: <input type ="text" value="200" name="numofword"/>
-        功能：<select name="type">
-            <option value="cluster">聚合人物信息</option>
-            <option value="crawl">爬取人物网页</option>
-        </select>
+  <!-- Main Header -->
+  <header class="main-header">
 
+    <!-- Logo -->
+    <a href="/mainpage" class="logo">
+      <!-- mini logo for sidebar mini 50x50 pixels -->
+      <span class="logo-mini"><b>主页</b></span>
+      <!-- logo for regular state and mobile devices -->
+      <span class="logo-lg"><b>主页</b></span>
+    </a>
 
-        <input type="submit" value="提交" />
-    </form>
-    <hr />
-    <table width="100%" border="0" cellpadding="2" cellspacing="1" style="table-layout:fixed;">
-    <tr>
+    <!-- Header Navbar -->
+    <nav class="navbar navbar-static-top" role="navigation">
+      <!-- Sidebar toggle button-->
+      <a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button">
+        <span class="sr-only">Toggle navigation</span>
+      </a>
+      <!-- Navbar Right Menu -->
+      <div class="navbar-custom-menu">
+                <ul class="nav navbar-nav">
+                    <!-- User Account: style can be found in dropdown.less -->
+                    <li>
+                        <a id="id_profile" href="/account/changeprofile/" class="btn" data-toggle="formmodal"
+                           data-target="#ProfilePopup" data-backdrop="static"> <span
+                                class="hidden-xs">欢迎：{{ user_name }}</span></a>
+                    </li>
+                    <li>
+                        <a id="id_pwd" href="/account/changepwd/" class="btn" data-toggle="formmodal"
+                           data-target="#PwdPopup" data-backdrop="static"><i class="fa fa-key"></i></a>
+                    </li>
+                    <!-- Control Sidebar Toggle Button -->
+                    <li>
+                        <a id="id_logout" class="btn" data-toggle="infomodal" data-target="#LogoutPopup"
+                           data-backdrop="static"><i class="fa fa-sign-out"></i></a>
+                    </li>
+                </ul>
+            </div>
+    </nav>
+  </header>
+  <!-- Left side column. contains the logo and sidebar -->
+  <aside class="main-sidebar">
 
-        <td style="width:150px" valign="top";>
-            <h3>历史查询</h3>
-            <form action="/index/" method="post">
-                <input name="delete" type="submit" value="删除" />
-            </form>
-            <hr style="height:1px;border:none;border-top:1px solid #555555;" />
+    <!-- sidebar: style can be found in sidebar.less -->
+    <section class="sidebar">
+
+      <!-- Sidebar user panel (optional) -->
+      <div class="user-panel">
+        <div class="pull-left image">
+          <img src="/static/dist/img/admin.jpg" class="img-circle" alt="User Image">
+        </div>
+        <div class="pull-left info">
+          <p>管理员</p>
+          <!-- Status -->
+          <a href="#"><i class="fa fa-circle text-success"></i> 在线</a>
+        </div>
+      </div>
+
+      <!-- search form (Optional) -->
+      <form action="#" method="get" class="sidebar-form">
+        <!--<div class="input-group">
+          <input type="text" name="q" class="form-control" placeholder="Search...">
+          <span class="input-group-btn">
+              <button type="submit" name="search" id="search-btn" class="btn btn-flat"><i class="fa fa-search"></i>
+              </button>
+            </span>
+        </div>-->
+      </form>
+      <!-- /.search form -->
+
+      <!-- Sidebar Menu -->
+      <ul class="sidebar-menu" data-widget="tree">
+        <li class="header">选项</li>
+        <!-- Optionally, you can add icons to the links -->
+        <li class="active"><a href="/crawl"><i class="fa fa-link"></i> <span>搜索人物网页信息</span></a></li>
+        <li class="treeview">
+          <a href="#"><i class="fa fa-link"></i> <span>选择数据源</span>
+            <span class="pull-right-container">
+                <i class="fa fa-angle-left pull-right"></i>
+              </span>
+          </a>
+          <ul class="treeview-menu">
+            <li><a href="/file">来自文件</a></li>
+            <li><a href="/input">手动输入</a></li>
+          </ul>
+        </li>
+      <li class="active"><a href="/autocrawl"><i class="fa fa-link"></i> <span>自动爬取人物信息</span></a></li>
+        <li class="treeview">
+          <a href="#"><i class="fa fa-link"></i> <span>历史记录</span>
+            <span class="pull-right-container">
+                <i class="fa fa-angle-left pull-right"></i>
+              </span>
+          </a>
+          <ul class="treeview-menu">
             {% for line in namels %}
                 <li><a href="{% url 'sample:index' %}?name={{ line }}">{{ line }}</a></li>
             {% endfor %}
-        </td>
-    <td valign="top">
-    <h1 style="background-color: antiquewhite;color:black;">结果展示</h1>
-    <table border="1">
+          </ul>
+        </li>
+          <li><a href="/index?name='delete'"><i class="fa fa-link"></i> <span>删除历史</span></a></li>
+
+      </ul>
+      <!-- /.sidebar-menu -->
+    </section>
+    <!-- /.sidebar -->
+  </aside>
+
+  <!-- Content Wrapper. Contains page content -->
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <h1>
+        人物信息聚合子系统
+        <small>version 1.0</small>
+      </h1>
+      <!--<ol class="breadcrumb">
+        <li><a href="#"><i class="fa fa-dashboard"></i> Level</a></li>
+        <li class="active">Here</li>
+      </ol>-->
+    </section>
+
+    <!-- Main content -->
+  <div id='main1' style='margin:5px 10px 20px 200px;width:600px;height:400px;'></div>
+                            <script type="text/javascript">
+                            var myChart = echarts.init(document.getElementById('main1'));
+
+var nodes = [];
+var links = [];
+var constMaxDepth = 2;
+var constMaxChildren = 7;
+var constMinChildren = 4;
+var constMaxRadius = 10;
+var constMinRadius = 2;
+
+function rangeRandom(min, max) {
+    return Math.random() * (max - min) + min;
+}
+
+function createRandomNode(depth) {
+    var node = {
+        name : 'NODE_' + nodes.length,
+        value : rangeRandom(constMinRadius, constMaxRadius),
+        // Custom properties
+        id : nodes.length,
+        depth : depth,
+        category : depth === constMaxDepth ? 0 : 1
+    }
+    nodes.push(node);
+
+    return node;
+}
+
+function forceMockThreeData() {
+    var depth = 0;
+    var rootNode = {
+        name : 'ROOT',
+        value : rangeRandom(constMinRadius, constMaxRadius),
+        // Custom properties
+        id : 0,
+        depth : 0,
+        category : 2
+    }
+    nodes.push(rootNode);
+
+    function mock(parentNode, depth) {
+        var nChildren = Math.round(rangeRandom(constMinChildren, constMaxChildren));
+
+        for (var i = 0; i < nChildren; i++) {
+            var childNode = createRandomNode(depth);
+            links.push({
+                source : parentNode.id,
+                target : childNode.id,
+                weight : 1
+            });
+            if (depth < constMaxDepth) {
+                mock(childNode, depth + 1);
+            }
+        }
+    }
+
+    mock(rootNode, 0);
+}
+
+forceMockThreeData();
+
+option = {
+    title : {
+        text: 'Force',
+        subtext: 'Force-directed tree',
+        x:'right',
+        y:'bottom'
+    },
+    tooltip : {
+        trigger: 'item',
+        formatter: '{a} : {b}'
+    },
+    toolbox: {
+        show : true,
+        feature : {
+            restore : {show: true},
+            magicType: {show: true, type: ['force', 'chord']},
+            saveAsImage : {show: true}
+        }
+    },
+    legend: {
+        x: 'left',
+        data:['叶子节点','非叶子节点', '根节点']
+    },
+    series : [
+        {
+            type:'force',
+            name : "Force tree",
+            ribbonType: false,
+            categories : [
+                {
+                    name: '叶子节点'
+                },
+                {
+                    name: '非叶子节点'
+                },
+                {
+                    name: '根节点'
+                }
+            ],
+            itemStyle: {
+                normal: {
+                    label: {
+                        show: false
+                    },
+                    nodeStyle : {
+                        brushType : 'both',
+                        borderColor : 'rgba(255,215,0,0.6)',
+                        borderWidth : 1
+                    }
+                }
+            },
+            minRadius : constMinRadius,
+            maxRadius : constMaxRadius,
+            coolDown: 0.995,
+            steps: 10,
+            nodes : nodes,
+            links : links,
+            steps: 1
+        }
+    ]
+};
+
+              myChart.setOption(option);
+
+        </script>
+  <div id='main' style='margin:5px 10px 20px 200px;width:600px;height:400px;'></div>
+  <script type="text/javascript">
+        var myChart = echarts.init(document.getElementById('main'));
+        var data = genData();
+
+
+option = {
+    title : {
+        text: '人物信息聚合结果',
+        subtext: '比例图',
+        x:'center'
+    },
+    tooltip : {
+        trigger: 'item',
+        formatter: "{a} <br/>{b} : {c} ({d}%)"
+    },
+    legend: {
+        type: 'scroll',
+        orient: 'vertical',
+        right: 10,
+        top: 20,
+        bottom: 20,
+        data: data.legendData,
+
+        selected: data.selected
+    },
+    series : [
+        {
+            name: '聚合结果',
+            type: 'pie',
+            radius : '55%',
+            center: ['40%', '50%'],
+            data: data.seriesData,
+            itemStyle: {
+                emphasis: {
+                    shadowBlur: 10,
+                    shadowOffsetX: 0,
+                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+                }
+            }
+        }
+    ]
+};
+
+
+
+
+function genData() {
+    var worddata = {{ dict|safe }};
+    var legendData = {{ List }};
+    var seriesData = [];
+    var selected = {};
+    var n = legendData.length
+    for (var i = 0; i < n; i++) {
+        legendData.push(i + 1);
+        var temp = worddata[i]['words'].slice(0,6);
+        var temp2 = [];
+        for (var j = 0; j < 6; j++) {
+            temp3 = temp[j].toString().split(',');
+            temp2.push(temp3.slice(0,1));
+        }
+        seriesData.push({
+            name: i+1 + ': ' + temp2,
+            value: legendData[i]
+        });
+        selected[name] = i < legendData.length;
+    }
+
+    return {
+        legendData: legendData,
+        seriesData: seriesData,
+        selected: selected
+    };
+
+}
+    myChart.setOption(option);
+    </script>
+
+
+    <section class="content container-fluid">
+
+                <!-- Horizontal Form -->
+
+        <h1>网页结果<small>({{ peoplename }})</small></h1>
+
+    <table border="1" class="table table-bordered">
            <thead>
                <th>聚合结果</th>
                <th>网页地址</th>
@@ -89,6 +403,8 @@
                                         {% endfor %}</li>
                                 {% endfor %}
                             </div>
+
+
                        </td>
                    </tr>
                {% endfor %}
@@ -96,25 +412,101 @@
 
            </tbody>
     </table>
-    <table border="1">
-           <thead>
-               <th>未使用网页（网页相关信息较少）</th>
-           </thead>
-           <tbody>
-           　　{% for line in unuse %}
-                   <tr>
-                       <td> {{ line | urlize }}</td>
-                   </tr>
-               {% endfor %}
-           </tbody>
-    </table>
-    </td>
-    </tr>
-    </table>
+      <!--------------------------
+        | Your Page Content Here |
+        -------------------------->
+
+    </section>
+    <!-- /.content -->
+  </div>
+  <!-- /.content-wrapper -->
+
+  <!-- Main Footer -->
+  <footer class="main-footer">
+    <!-- To the right -->
+    <div class="pull-right hidden-xs">
+
+    </div>
+    <!-- Default to the left -->
+    <strong>Copyright &copy; 2016 <a href="#">Company</a>.</strong> All rights reserved.
+  </footer>
+
+  <!-- Control Sidebar -->
+  <!--<aside class="control-sidebar control-sidebar-dark">
+
+    <ul class="nav nav-tabs nav-justified control-sidebar-tabs">
+      <li class="active"><a href="#control-sidebar-home-tab" data-toggle="tab"><i class="fa fa-home"></i></a></li>
+      <li><a href="#control-sidebar-settings-tab" data-toggle="tab"><i class="fa fa-gears"></i></a></li>
+    </ul>
+
+    <div class="tab-content">
+
+      <div class="tab-pane active" id="control-sidebar-home-tab">
+        <h3 class="control-sidebar-heading">Recent Activity</h3>
+        <ul class="control-sidebar-menu">
+          <li>
+            <a href="javascript:;">
+              <i class="menu-icon fa fa-birthday-cake bg-red"></i>
+
+              <div class="menu-info">
+                <h4 class="control-sidebar-subheading">Langdon's Birthday</h4>
+
+                <p>Will be 23 on April 24th</p>
+              </div>
+            </a>
+          </li>
+        </ul>
 
 
-    <script src="vue.js"></script>
+        <h3 class="control-sidebar-heading">Tasks Progress</h3>
+        <ul class="control-sidebar-menu">
+          <li>
+            <a href="javascript:;">
+              <h4 class="control-sidebar-subheading">
+                Custom Template Design
+                <span class="pull-right-container">
+                    <span class="label label-danger pull-right">70%</span>
+                  </span>
+              </h4>
 
+              <div class="progress progress-xxs">
+                <div class="progress-bar progress-bar-danger" style="width: 70%"></div>
+              </div>
+            </a>
+          </li>
+        </ul>
+
+
+      </div>
+
+      <div class="tab-pane" id="control-sidebar-stats-tab">Stats Tab Content</div>
+
+      <div class="tab-pane" id="control-sidebar-settings-tab">
+        <form method="post">
+          <h3 class="control-sidebar-heading">General Settings</h3>
+
+          <div class="form-group">
+            <label class="control-sidebar-subheading">
+              Report panel usage
+              <input type="checkbox" class="pull-right" checked>
+            </label>
+
+            <p>
+              Some information about this general settings option
+            </p>
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+
+  </aside>-->
+  <!-- /.control-sidebar -->
+  <!-- Add the sidebar's background. This div must be placed
+  immediately after the control sidebar -->
+  <div class="control-sidebar-bg"></div>
+</div>
 </body>
-
 </html>
+

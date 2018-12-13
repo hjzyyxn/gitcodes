@@ -9,4 +9,5 @@ urlpatterns = [
     url(r'^input/', views.input, name='input'),
     url(r'^autocrawl/', views.autocrawl, name='autocrawl'),
     url(r'^mainpage/', views.mainpage, name='mainpage'),
+    url(r'^htmltest/', views.testhtml, name='htmltest'),
 ]

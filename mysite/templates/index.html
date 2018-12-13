@@ -268,18 +268,276 @@ function genData() {
                             </script>
 
                             <div id="ner-{{ line.no }}" style="display:none">
-                                {% for key,value in line.ner.items %}
-                                    <li>{{ key }}:
-                                        {% for lin in value %}
-                                            <p>{{ lin.0 }}, {{ lin.1 }}</p>
-                                        {% endfor %}</li>
-                                {% endfor %}
+                                <select id="ners-select-{{ line.no }}"  onchange='choose1("{{ line.no }}");'>
+                                    <option value="3">ORGANIZATION</option>
+                                    <option value="4">PERSON</option>
+                                    <option value="5">LOCATION</option>
+                                </select>
+                                <div id="supple-{{ line.no }}"  style='margin:0px 0px 0px 10px;width:400px;height:300px;'></div>
+                                <script>
+                            function choose1(h){
+
+                                if(document.getElementById("ners-select-" + h).value=='3')
+                                {
+
+                                    var myChart1 = echarts.init(document.getElementById("supple-" + h));
+                                    var data = genData(h);
+
+
+option = {
+    title : {
+        text: '机构比例',
+        subtext: '',
+        x:'center'
+    },
+    tooltip : {
+        trigger: 'item',
+        formatter: "{a} <br/>{b} : {c} ({d}%)"
+    },
+    legend: {
+        type: 'scroll',
+        orient: 'vertical',
+        right: 10,
+        top: 20,
+        bottom: 20,
+        data: data.legendData,
+
+        selected: data.selected
+    },
+    series : [
+        {
+            name: '聚合结果',
+            type: 'pie',
+            radius : '55%',
+            center: ['40%', '50%'],
+            data: data.seriesData,
+            itemStyle: {
+                emphasis: {
+                    shadowBlur: 10,
+                    shadowOffsetX: 0,
+                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+                }
+            }
+        }
+    ]
+};
+
+
+
+
+function genData(h) {
+    var nerdata = {{ dict|safe }};
+    var legendData = [];
+    var seriesData = [];
+    var selected = {};
+    var j = 0;
+    var n = (nerdata[h-1]['ner']['ORGANIZATION']).length;
+
+    for (var i = 0; i < n; i++) {
+        var temptemp = nerdata[h-1]['ner']['ORGANIZATION'][i][1];
+        legendData.push(temptemp);
+        var temp = nerdata[h-1]['ner']['ORGANIZATION'];
+        var temp2 = [];
+        for (var j = 0; j < n; j++) {
+            temp3 = temp[j].toString().split(',');
+            temp2.push(temp3[0]);
+        }
+        seriesData.push({
+            name: i+1 + ': ' + temp2[i],
+            value: legendData[i]
+        });
+        selected[name] = i < legendData.length;
+    }
+
+    return {
+        legendData: legendData,
+        seriesData: seriesData,
+        selected: selected
+    };
+
+}
+    myChart1.setOption(option);
+                                }
+                                else if(document.getElementById("ners-select-" + h).value=='4')
+                                {
+                                    var myChart1 = echarts.init(document.getElementById("supple-" + h));
+                                    var data = genData(h);
+
+
+option = {
+    title : {
+        text: '关系人比例',
+        subtext: '',
+        x:'center'
+    },
+    tooltip : {
+        trigger: 'item',
+        formatter: "{a} <br/>{b} : {c} ({d}%)"
+    },
+    legend: {
+        type: 'scroll',
+        orient: 'vertical',
+        right: 10,
+        top: 20,
+        bottom: 20,
+        data: data.legendData,
+
+        selected: data.selected
+    },
+    series : [
+        {
+            name: '聚合结果',
+            type: 'pie',
+            radius : '55%',
+            center: ['40%', '50%'],
+            data: data.seriesData,
+            itemStyle: {
+                emphasis: {
+                    shadowBlur: 10,
+                    shadowOffsetX: 0,
+                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+                }
+            }
+        }
+    ]
+};
+
+
+
+
+function genData(h) {
+    var nerdata = {{ dict|safe }};
+    var legendData = [];
+    var seriesData = [];
+    var selected = {};
+    var j = 0;
+    var n = (nerdata[h-1]['ner']['PERSON']).length;
+
+    for (var i = 0; i < n; i++) {
+        var temptemp = nerdata[h-1]['ner']['PERSON'][i][1];
+        legendData.push(temptemp);
+        var temp = nerdata[h-1]['ner']['PERSON'];
+        var temp2 = [];
+        for (var j = 0; j < n; j++) {
+            temp3 = temp[j].toString().split(',');
+            temp2.push(temp3[0]);
+        }
+        seriesData.push({
+            name: i+1 + ': ' + temp2[i],
+            value: legendData[i]
+        });
+        selected[name] = i < legendData.length;
+    }
+
+    return {
+        legendData: legendData,
+        seriesData: seriesData,
+        selected: selected
+    };
+
+}
+    myChart1.setOption(option);
+                                }
+                                else if(document.getElementById("ners-select-" + h).value=='5')
+                                {
+                                        var myChart1 = echarts.init(document.getElementById("supple-" + h));
+                                    var data = genData(h);
+
+
+option = {
+    title : {
+        text: '地域比例',
+        subtext: '',
+        x:'center'
+    },
+    tooltip : {
+        trigger: 'item',
+        formatter: "{a} <br/>{b} : {c} ({d}%)"
+    },
+    legend: {
+        type: 'scroll',
+        orient: 'vertical',
+        right: 10,
+        top: 20,
+        bottom: 20,
+        data: data.legendData,
+
+        selected: data.selected
+    },
+    series : [
+        {
+            name: '聚合结果',
+            type: 'pie',
+            radius : '55%',
+            center: ['40%', '50%'],
+            data: data.seriesData,
+            itemStyle: {
+                emphasis: {
+                    shadowBlur: 10,
+                    shadowOffsetX: 0,
+                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+                }
+            }
+        }
+    ]
+};
+
+
+
+
+function genData(h) {
+    var nerdata = {{ dict|safe }};
+    var legendData = [];
+    var seriesData = [];
+    var selected = {};
+    var j = 0;
+    var n = (nerdata[h-1]['ner']['LOCATION']).length;
+
+    for (var i = 0; i < n; i++) {
+        var temptemp = nerdata[h-1]['ner']['LOCATION'][i][1];
+        legendData.push(temptemp);
+        var temp = nerdata[h-1]['ner']['LOCATION'];
+        var temp2 = [];
+        for (var j = 0; j < n; j++) {
+            temp3 = temp[j].toString().split(',');
+            temp2.push(temp3[0]);
+        }
+        seriesData.push({
+            name: i+1 + ': ' + temp2[i],
+            value: legendData[i]
+        });
+        selected[name] = i < legendData.length;
+    }
+
+    return {
+        legendData: legendData,
+        seriesData: seriesData,
+        selected: selected
+    };
+
+}
+    myChart1.setOption(option);
+                                }
+                            };
+                            </script>
                             </div>
+
+
                        </td>
                    </tr>
                {% endfor %}
 
 
+           </tbody>
+    </table>
+    <h3>未使用网页（网页相关信息较少）</h3>
+    <table border="1" class="table table-bordered">
+           <tbody>
+           　　{% for line in unuse %}
+                   <tr>
+                       <td> {{ line | urlize }}</td>
+                   </tr>
+               {% endfor %}
            </tbody>
     </table>
       <!--------------------------

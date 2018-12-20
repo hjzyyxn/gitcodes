@@ -241,12 +241,77 @@ function genData() {
                        <td>{{ line.no }}</td>
                        <td>
                            {%  for lin in line.netaddress %}
-                                <li>{{ lin | urlize }}</li>
+                               <div>
+                                   <li>{{ lin.netaddressip | urlize }} <a style="float:right" href="/index?name='deletedata'&&peoplename={{ peoplename }}&&deletesql='{{ lin.netaddressid }}'">删除</a></li></br>
+                               </div>
                            {% endfor %}
                        </td>
                        <td>{% for lin in line.words %}
-                           <li>{{ lin.0 }}, {{ lin.1 }}</li>
+                           <li>{{ lin.0 }}</li>
                            {% endfor %}
+                           <div id="wordper-{{ line.no }}" style='width:200px;height:300px;'></div>
+                            <script type="text/javascript">
+                            var myChart2 = echarts.init(document.getElementById("wordper-" + {{ line.no }}));
+                            var data = genData({{ line.no }});
+                           option = {
+    color: ['#3398DB'],
+    tooltip : {
+        trigger: 'axis',
+        axisPointer : {            // 坐标轴指示器，坐标轴触发有效
+            type : 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+        }
+    },
+    grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+    },
+    xAxis : [
+        {
+            type : 'category',
+            data : data.legendData,
+            axisTick: {
+                alignWithLabel: true
+            }
+        }
+    ],
+    yAxis : [
+        {
+            type : 'value'
+        }
+    ],
+    series : [
+        {
+            name:'数量',
+            type:'bar',
+            barWidth: '60%',
+            data:data.seriesData,
+        }
+    ]
+};
+                           function genData(h) {
+    var worddata = {{ dict|safe }};
+    var legendData = [];
+    var seriesData = [];
+    var n = (worddata[h-1]['words']).length;
+
+    for (var i = 0; i < n; i++) {
+        var temptemp = worddata[h-1]['words'][i][0];
+        legendData.push(temptemp);
+        var temp1 = worddata[h-1]['words'][i][1];
+        seriesData.push(temp1);
+    }
+
+    return {
+        legendData: legendData,
+        seriesData: seriesData,
+    };
+
+}
+                           myChart2.setOption(option);
+                           </script>
+
                        </td>
                        <td>
                            <select id="ner-select-{{ line.no }}"  onchange='choose("{{ line.no }}");'>

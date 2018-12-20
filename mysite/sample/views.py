@@ -74,6 +74,17 @@ def index(request):
                 deletehistory()
                 name_list = loadhistory()
                 return render(request, "index.html", {"namels": name_list})
+            elif name[1:-1] == 'deletedata':
+                deletesql = request.GET['deletesql']
+                peoplename = request.GET['peoplename']
+                print ('deletesql',deletesql)
+                deletepage(peoplename, deletesql)
+                finallist, unuselist, numlist = showresult(peoplename)
+                name_list = loadhistory()
+                return render(request, "index.html",
+                              {"data": finallist, "unuse": unuselist, "namels": name_list, "List": numlist,
+                               "peoplename": peoplename, "dict": json.dumps(finallist)})
+
             else:
                 name = name[1:-1]
                 print name
@@ -726,22 +737,26 @@ def webalgorithm(name):
         return filtered_tokens
 
     t = []
+    addressdict = []
     clusterstring = []
-    addresslist = []
     unuselist = []
     try:
         for i in clusterresult:
             words = ""
             temp = []
+
             for row in wordresults:
                 if row[0] in clusterresult[i]:
+                    temp2 = dict()
                     word = row[2]
                     for ele in namelist:
                         word = word.replace(ele, "")
                     words += word
-                    temp.append(row[1])
+                    temp2['netaddressid'] = row[0]
+                    temp2['netaddressip'] = row[1]
+                    temp.append(temp2)
             clusterstring.append(words)
-            addresslist.append(temp)
+            addressdict.append(temp)
             t.append(tokenize(words))
 
         for row in wordresults:
@@ -796,7 +811,7 @@ def webalgorithm(name):
     for i in range(0, len(clusterresult)):
         temp = dict()
         temp['no'] = i + 1
-        temp['netaddress'] = addresslist[i]
+        temp['netaddress'] = addressdict[i]
         temp['words'] = finalwordresult[i]
         temp['ner'] = nertype[i]
         finallist.append(temp)
@@ -857,22 +872,26 @@ def showresult(name):
         return filtered_tokens
 
     t = []
+    addressdict = []
     clusterstring = []
-    addresslist = []
     unuselist = []
     try:
         for i in clusterresult:
             words = ""
             temp = []
+
             for row in wordresults:
                 if row[0] in clusterresult[i]:
+                    temp2 = dict()
                     word = row[2]
                     for ele in namelist:
                         word = word.replace(ele, "")
                     words += word
-                    temp.append(row[1])
+                    temp2['netaddressid'] = row[0]
+                    temp2['netaddressip'] = row[1]
+                    temp.append(temp2)
             clusterstring.append(words)
-            addresslist.append(temp)
+            addressdict.append(temp)
             t.append(tokenize(words))
 
         for row in wordresults:
@@ -883,7 +902,7 @@ def showresult(name):
         cur.close()
         conn.close()
 
-
+    print addressdict
     tags = set(['NN', 'NNS', 'NNP', 'NNPS', 'VB', 'VBD', 'VBG', 'VBP', 'VNZ', 'VBN'])
     tag = set(['PRP','PRP$','RB','VBZ','RBR','RBS','WDT','WP','WP$','WRB', 'VB', 'VBD', 'VBG', 'VBP'])
 
@@ -921,17 +940,17 @@ def showresult(name):
                     d[j] = collections.Counter(ners[j]).most_common(7)
         nertype.append(d)
 
-
     finallist = []
     numlist=[]
     for i in range(0, len(clusterresult)):
         temp = dict()
         temp['no'] = i + 1
-        temp['netaddress'] = addresslist[i]
+        temp['netaddress'] = addressdict[i]
         temp['words'] = finalwordresult[i]
         temp['ner'] = nertype[i]
         finallist.append(temp)
         numlist.append(len(clusterresult[i]))
+
 
     return finallist, unuselist, numlist
 
@@ -1181,3 +1200,20 @@ def table_exists(name):        #这个函数用来判断表是否存在
         return 1        #存在返回1
     else:
         return 0        #不存在返回0
+
+def deletepage(name,deletesql):
+    tablename = name.replace(' ', '').lower()
+    tablename += "result"
+    conn = pymysql.connect(host='127.0.0.1', port=3306, user='root', password="123",
+                           db='mysql', charset="utf8")
+    cur = conn.cursor()
+    cur.execute("USE data")
+    num = filter(str.isdigit, deletesql.encode("utf-8"))
+    print int(num) == 2
+    try:
+        sql= "delete from " + tablename + " where pageno = " + num
+        cur.execute(sql)
+        cur.connection.commit()
+    finally:
+        cur.close()
+        conn.close()

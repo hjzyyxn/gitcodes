@@ -44,7 +44,43 @@ def index(request):
             for i in crawllist:
                 savehistory(i)
         name = request.POST.get("name", None)
-        pagenum = request.POST.get("pagenum", None)
+        if not name:
+            name = request.GET["name"]
+        print('postname',name)
+
+        if name and name[1:-1] == 'changecluster':
+            unuseidlist = request.POST.getlist("unuseidlist", None)
+            clustersno = request.POST.get("clustersno", None)
+            peoplename = request.GET['peoplename']
+            print peoplename
+            print unuseidlist, clustersno
+            changepage(unuseidlist, clustersno, peoplename)
+            finallist, unuselist, numlist = showresult(peoplename)
+            name_list = loadhistory()
+            return render(request, "index.html",
+                          {"data": finallist, "unuse": unuselist, "namels": name_list, "List": numlist,
+                           "peoplename": peoplename, "dict": json.dumps(finallist)})
+
+        else:
+            pagenum = request.POST.get("pagenum", None)
+            numofword = request.POST.get("numofword", None)
+            type = request.POST.get("type", None)
+            if name:
+                savehistory(name)
+            name_list = loadhistory()
+            if type == 'crawl':
+                webcrawler(name, pagenum)
+                webparse(name)
+                finallist, unuselist = showwebpage(name)
+                return render(request, "crawl.html", {"data": finallist, "unuse": unuselist, "namels": name_list})
+            elif type == 'cluster':
+                webcrawler(name, pagenum)
+                webparse(name)
+                webmanipulate(name, numofword)
+                finallist, unuselist = webalgorithm(name)
+                return render(request, "index.html", {"data": finallist, "unuse": unuselist, "namels": name_list})
+
+        '''pagenum = request.POST.get("pagenum", None)
         numofword = request.POST.get("numofword", None)
         type = request.POST.get("type", None)
         if name:
@@ -60,7 +96,8 @@ def index(request):
             webparse(name)
             webmanipulate(name, numofword)
             finallist, unuselist = webalgorithm(name)
-            return render(request, "index.html", {"data": finallist, "unuse": unuselist,"namels": name_list})
+            return render(request, "index.html", {"data": finallist, "unuse": unuselist,"namels": name_list})'''
+
     if request.method == "GET":
 
         if not request.GET:
@@ -875,6 +912,7 @@ def showresult(name):
     addressdict = []
     clusterstring = []
     unuselist = []
+    nums = []
     try:
         for i in clusterresult:
             words = ""
@@ -890,13 +928,17 @@ def showresult(name):
                     temp2['netaddressid'] = row[0]
                     temp2['netaddressip'] = row[1]
                     temp.append(temp2)
+                    nums.append(row[0])
             clusterstring.append(words)
             addressdict.append(temp)
             t.append(tokenize(words))
 
         for row in wordresults:
             if row[0] not in nums:
-                unuselist.append(row[1])
+                temp3 = dict()
+                temp3['unuseid'] = row[0]
+                temp3['unuseip'] = row[1]
+                unuselist.append(temp3)
 
     finally:
         cur.close()
@@ -1217,3 +1259,28 @@ def deletepage(name,deletesql):
     finally:
         cur.close()
         conn.close()
+
+def changepage(unuseidlist, clustersno, name):
+    clustersno = filter(str.isdigit, clustersno.encode("utf-8"))
+    clustersno = int(clustersno)-1
+    print clustersno
+    tablename = name.replace(' ', '').lower()
+    tablename += "result"
+    print tablename
+    conn = pymysql.connect(host='127.0.0.1', port=3306, user='root', password="123",
+                           db='mysql', charset="utf8")
+    cur = conn.cursor()
+    cur.execute("USE data")
+    #num = filter(str.isdigit, deletesql.encode("utf-8"))
+    try:
+        for i in unuseidlist:
+            print i
+            temp = filter(str.isdigit, i.encode("utf-8"))
+            temp = int(temp)
+            print temp
+            cur.execute("insert into " + tablename + "(id, pageno) values (\"%s\",\"%s\")", (clustersno, temp))
+            cur.connection.commit()
+    finally:
+        cur.close()
+        conn.close()
+'''cur.execute("insert into " + tablename + "word" + "(id, url, wordset) values (\"%s\",\"%s\", \"%s\")", (row[0], row[1], allwords_stemmed))'''

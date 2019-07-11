@@ -8,6 +8,7 @@
 		<setting name="mapUnderscoreToCamelCase" value="true"/>
 	</settings>
 	
+	<!-- 为resultType设置别名，简化 -->
 	<typeAliases>
 		<package name="tk.mybatis.simple.model"/>
 	</typeAliases>
@@ -26,7 +27,8 @@
 			</dataSource>
 		</environment>
 	</environments>
-		
+	
+	<!-- 扫描包里的全部接口 -->	
 	<mappers>
 		<package name="tk.mybatis.simple.mapper"/>
 	</mappers>

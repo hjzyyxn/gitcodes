@@ -37,7 +37,7 @@
 		
 		<!-- 使用通配符匹配数据库的所有表 -->			 
 		<table tableName="%">
-			<generatedKey column="id" sqlStatement="MySql"/>
+			<generatedKey column="id" sqlStatement="MySql" identity="true" type="post"/>
 		</table>
 	</context>
 </generatorConfiguration>

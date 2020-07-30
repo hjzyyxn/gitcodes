@@ -1,7 +1,7 @@
 public static <AnyType extends Comparable<? super AnyType>>
 void mergeSort(AnyType[] a) {
 	AnyType[] tmpArray = (AnyType[]) new Comparable[a.length];
-	mergeSort(a, tmpArray, 0, a,length - 1);
+	mergeSort(a, tmpArray, 0, a.length - 1);
 }
 
 private static <AnyType extends Comparable<? super AnyType>>

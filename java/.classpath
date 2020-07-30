@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="src" path="DesignPattern/src"/>
+	<classpathentry kind="src" path="disjointSet"/>
+	<classpathentry kind="src" path="hash"/>
+	<classpathentry kind="src" path="heap"/>
+	<classpathentry kind="src" path="javacodes/src"/>
+	<classpathentry kind="src" path="list"/>
+	<classpathentry kind="src" path="sort"/>
+	<classpathentry kind="src" path="tree"/>
+	<classpathentry kind="output" path="DesignPattern/bin"/>
+</classpath>
